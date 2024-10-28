@@ -23,7 +23,6 @@ type WeatherResponse = {
 
 export async function POST(req: Request) {
 	const path: Line[] = await req.json()
-	console.log('CACHE MISS')
 	let meteoRequests = 0
 	const aggregateDistance: number = path.reduce((prev, curr) => prev + curr.distance, 0)
 	const meteoRequestPromises = []

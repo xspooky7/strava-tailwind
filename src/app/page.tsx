@@ -2,7 +2,6 @@ import { loadScript } from '@/lib/load-script'
 import { DataTable } from './data-table'
 import { columns } from './columns'
 import { Segment } from '../../types'
-import axios from 'axios'
 
 export default async function Home() {
 	let segs: Segment[] = []
