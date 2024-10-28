@@ -15,23 +15,15 @@ export const getClassification = (segment: Segment) => {
 	if (getPreciseDistance(segment.start_latlng, segment.end_latlng) <= THRESHHOLD.CIRCUIT)
 		classification.push('Circuit')
 	const { path } = segment
-	let totalWeightedBearingChange = 0
-	let totalDistance = 0
+	let aggregateBearingChange = 0
 
 	for (let i = 1; i < path.length; i++) {
 		const previousSegment = path[i - 1]
 		const currentSegment = path[i]
 
-		// Calculate the absolute difference in bearings
-		const bearingDifference = Math.abs(currentSegment.bearing - previousSegment.bearing)
-		const adjustedDifference =
-			bearingDifference > 180 ? 360 - bearingDifference : bearingDifference
-
-		// Weight the bearing difference by the segment's distance
-		totalWeightedBearingChange += adjustedDifference * currentSegment.distance
-		totalDistance += currentSegment.distance
+		aggregateBearingChange += Math.abs(currentSegment.bearing - previousSegment.bearing)
 	}
-	const averageBearingChange = totalWeightedBearingChange / totalDistance
+	const averageBearingChange = aggregateBearingChange / (path.length - 1)
 	if (averageBearingChange > THRESHHOLD.CURVY) classification.push('Curvy')
 	else if (averageBearingChange < THRESHHOLD.STRAIGHT) classification.push('Straight')
 	const date = new Date(segment.created_at)

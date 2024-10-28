@@ -43,6 +43,7 @@
 -   [x] cache weather data in browser for 30min
 -   [x] Calculate average windspeed and add to tailwind column
 -   [ ] make sortable by kom status
+-   [ ] fix image config
 
 #### Bugs
 

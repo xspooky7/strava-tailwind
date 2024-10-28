@@ -6,7 +6,7 @@ export const THRESHHOLD = {
 	DOWNHILL: -7, // % negative average grade
 	OVERLONG: 10000, // m segment length
 	CURVY: 50, // degree average bearing change
-	STRAIGHT: 3, // degree average bearing change
+	STRAIGHT: 5, // degree average bearing change
 	UNCONTESTET: 0.01, // efforts per day since creation (˜35/year)
 	CONTESTET: 3500, // efforts total
 }

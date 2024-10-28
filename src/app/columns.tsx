@@ -176,8 +176,11 @@ export const columns: ColumnDef<Segment>[] = [
 						<DropdownMenuLabel>Actions</DropdownMenuLabel>
 						<DropdownMenuItem
 							onClick={() =>
-								(window.location.href =
-									'https://www.strava.com/segments/' + row.original.id)
+								window.open(
+									'https://www.strava.com/segments/' + row.original.id,
+									'_blank',
+									'noopener,noreferrer'
+								)
 							}
 						>
 							<SquareChevronRight className="h-4 w-4" />
