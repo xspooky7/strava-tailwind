@@ -114,7 +114,7 @@ export const loadScript = async () => {
 		const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
+				Accept: 'application/json',
 			},
 			body: JSON.stringify(segment.path),
 			next: { revalidate: 1800 },
