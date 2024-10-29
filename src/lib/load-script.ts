@@ -110,19 +110,16 @@ export const loadScript = async () => {
 
 	for (const segment of mergedSegmentsForUpdate) {
 		const isOwnedKom = ownedKomIds.includes(segment.id)
-		const weatherResponse = await fetch(
-			'strava-tailwind-13bqzxzrw-cy7s-projects.vercel.app/api/weather',
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(segment.path),
-				next: { revalidate: 1800 },
-			}
-		)
+		console.log('prefetch')
+		const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(segment.path),
+			next: { revalidate: 1800 },
+		})
 		const { meteoRequests, ...weatherData } = await weatherResponse.json()
-		//const { meteoRequests, ...weatherData } = await getWeather(segment.path)
 		meteoRequestCount += meteoRequests
 		mergedSegmentsWeather.push({ ...segment, ...weatherData, isOwnedKom })
 	}
