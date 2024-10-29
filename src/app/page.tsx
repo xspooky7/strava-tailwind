@@ -5,14 +5,13 @@ import { Segment } from '../../types'
 
 export default async function Home() {
 	let segs: Segment[] = []
-	let statusMessage =
-		'Hab die Seite noch mal offline genommen weil ich nochmal was kleines ändern will.'
+	let statusMessage = ''
 	/*const update = await axios({
 		method: 'put',
 		url: process.env.DB_SEGMENTS,
 		data: [],
 	})
-	statusMessage = update.status + ''
+	statusMessage = update.status + ''*/
 	try {
 		const startTime = performance.now()
 		const { segments, stravaRequestCount, meteoRequestCount, overflowIds, updateStatus } =
@@ -23,7 +22,7 @@ export default async function Home() {
 		// console.log(segments.length, stravaRequestCount, overflowIds, updateStatus)
 	} catch (error: any) {
 		statusMessage = error.message
-	}*/
+	}
 
 	return (
 		<div className="container mx-auto py-10">
