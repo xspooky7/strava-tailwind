@@ -50,3 +50,9 @@
 -   ~~Does way more requests than expected~~
 -   ~~Terrain column not rendering properly~~
 -   Sorting by terrain crashes the app
+
+const knownCurvy: number[] = [
+4487456, 5889179, 6285612, 11985523, 15478119, 18031608, 25084426, 28133338, 30858970,
+31179603, 34246826, 19043986, 21227381, 27730817, 16784079, 27210222, 32007195, 35455722,
+37841204,
+]

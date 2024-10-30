@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios'
 import { getPath } from './get-path'
 import { Segment } from '../../types'
 import { getClassification } from './classification'
+import { getFromDatabase, setDatabase } from './database'
 
 /**
  * Gathers a detailed version of all currently starred segments using a database as cache to relieve API rates.
@@ -17,31 +18,22 @@ export const loadScript = async () => {
 		stravaRequestCount = 0
 
 	// Fetching stored access token and cached segments
-	const [dbSegRequest, dbTokenRequest, dbOwnedKomsRequest] = await Promise.all([
-		axios({
-			method: 'get',
-			url: process.env.DB_SEGMENTS,
-		}).catch((err: AxiosError) => {
+	const [dbSegRequest, stravaToken, dbOwnedKomsRequest] = await Promise.all([
+		getFromDatabase('tailwind/segments').catch((err: AxiosError) => {
 			throw new Error(
 				`Error ${err.response!.status}: ${
 					err.response!.statusText
 				} - Couldn't retrieve segments from the database`
 			)
 		}),
-		axios({
-			method: 'get',
-			url: process.env.DB_TOKEN,
-		}).catch((err: AxiosError) => {
+		getFromDatabase('token/access').catch((err: AxiosError) => {
 			throw new Error(
 				`Error ${err.response!.status}: ${
 					err.response!.statusText
 				} - Couldn't retrieve acesss token from the database`
 			)
 		}),
-		axios({
-			method: 'get',
-			url: process.env.DB_KOM_IDS,
-		}).catch((err: AxiosError) => {
+		getFromDatabase('ids').catch((err: AxiosError) => {
 			throw new Error(
 				`Error ${err.response!.status}: ${
 					err.response!.statusText
@@ -49,12 +41,12 @@ export const loadScript = async () => {
 			)
 		}),
 	])
-	const dbSegments: Segment[] = dbSegRequest.data ? dbSegRequest.data : []
-	const ownedKomIds: number[] = dbOwnedKomsRequest.data ? dbOwnedKomsRequest.data : []
+	const dbSegments: Segment[] = dbSegRequest ? dbSegRequest : []
+	const ownedKomIds: number[] = dbOwnedKomsRequest ? dbOwnedKomsRequest : []
 
 	// Fetching starred segments
 	const stravaAuth = {
-		Authorization: 'Bearer ' + dbTokenRequest.data,
+		Authorization: 'Bearer ' + stravaToken,
 	}
 	stravaRequestCount++
 	const starredSegments = await axios({
@@ -100,17 +92,12 @@ export const loadScript = async () => {
 
 	// Update the database (could make this update conditional)
 	const mergedSegmentsForUpdate: Segment[] = cachedSegments.concat(newSegments)
-	const update = await axios({
-		method: 'put',
-		url: process.env.DB_SEGMENTS,
-		data: mergedSegmentsForUpdate,
-	})
+	const updateStatus = setDatabase('tailwind/segments', mergedSegmentsForUpdate)
 
 	const mergedSegmentsWeather: Segment[] = []
-
+	//process.env.WEATHER_API_URL!
 	for (const segment of mergedSegmentsForUpdate) {
 		const isOwnedKom = ownedKomIds.includes(segment.id)
-		console.log('prefetch')
 		const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
 			method: 'POST',
 			headers: {
@@ -129,7 +116,7 @@ export const loadScript = async () => {
 		stravaRequestCount,
 		meteoRequestCount,
 		overflowIds,
-		updateStatus: update.status,
+		updateStatus,
 	}
 }
 

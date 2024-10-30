@@ -32,7 +32,6 @@ export async function POST(req: Request) {
 		Math.ceil(aggregateDistance / WEATHER_QUERY_INTERVAL)
 	)
 
-	console.log('WEATHERSTART')
 	let range = 0,
 		d = 0
 	let queryFlag = false
@@ -115,7 +114,6 @@ const meteoRequest = async (coord: Coordinate) => {
 	}
 	const url = 'https://api.open-meteo.com/v1/forecast'
 	const responses = await fetchWeatherApi(url, params)
-	console.log(responses)
 	const response = responses[0]
 
 	const utcOffsetSeconds = response.utcOffsetSeconds()
