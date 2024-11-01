@@ -1,28 +1,28 @@
 import { loadScript } from '@/lib/load-script'
 import { DataTable } from './data-table'
 import { columns } from './columns'
-import { Segment } from '../../types'
+import { DetailedSegment } from '../../../../types'
+import axios from 'axios'
+import { setDatabase } from '@/lib/database'
 
 export default async function Home() {
-	let segs: Segment[] = []
+	let segs: DetailedSegment[] = []
 	let statusMessage = 'Under Maintenance'
-	/*const update = await axios({
-		method: 'put',
-		url: process.env.DB_SEGMENTS,
-		data: [],
-	})
-	statusMessage = update.status + ''
+	//const update = await setDatabase('tailwind/segments', [])
+	//statusMessage = update + ''
 	try {
 		const startTime = performance.now()
-		const { segments, stravaRequestCount, meteoRequestCount, overflowIds, updateStatus } =
+		const { segments, stravaRequestCount, meteoRequestCount, exceededRate, updateStatus } =
 			await loadScript()
 		segs = segments
 		const loadTime = Math.round(performance.now() - startTime)
-		statusMessage = `Page loaded in ${loadTime} milliseconds. Requests made: ${stravaRequestCount} Strava, ${meteoRequestCount} Open Meteo.`
+		statusMessage = `Page loaded in ${loadTime} milliseconds. Requests made: ${stravaRequestCount} Strava${
+			exceededRate ? ' (rate exceeded)' : ''
+		}, ${meteoRequestCount} Open Meteo. Update successfull ${updateStatus}.`
 		// console.log(segments.length, stravaRequestCount, overflowIds, updateStatus)
 	} catch (error: any) {
 		statusMessage = error.message
-	}*/
+	}
 
 	return (
 		<div className="container mx-auto py-10">

@@ -1,23 +1,22 @@
 import { getPreciseDistance } from 'geolib'
 import { THRESHHOLD } from '../../constants'
-import { Line, Segment } from '../../types'
+import { Line, DetailedSegment, Label } from '../../types'
 
 /**
  * Classifies a segment according to predefinded metrics
  *
- * @param {Segment} segment
- * @returns {string[]} A maximum of 2 classifications for the given segment
+ * @param {DetailedSegment} segment
+ * @returns {Label[]} A maximum of 2 classifications for the given segment
  */
 
-export const getClassification = (segment: Segment) => {
-	const classification: string[] = []
+export const getLabel = (segment: DetailedSegment): Label[] => {
+	const classification: Label[] = []
 	if (segment.hazardous) classification.push('Hazardous')
 	if (getPreciseDistance(segment.start_latlng, segment.end_latlng) <= THRESHHOLD.CIRCUIT)
 		classification.push('Circuit')
 	const { path } = segment
 	let aggregateDistance = path[0].distance
-	let maxBearingChange = 0,
-		weightedBearingChange = 0
+	let maxBearingChange = 0
 
 	for (let i = 1; i < path.length; i++) {
 		const previousPath = path[i - 1]
@@ -25,8 +24,6 @@ export const getClassification = (segment: Segment) => {
 
 		const bearingChange = Math.abs(currentPath.bearing - previousPath.bearing)
 		const adjustedChange = bearingChange > 180 ? 360 - bearingChange : bearingChange
-
-		weightedBearingChange += adjustedChange
 
 		aggregateDistance += currentPath.distance
 		maxBearingChange = Math.max(maxBearingChange, adjustedChange)
@@ -43,8 +40,8 @@ export const getClassification = (segment: Segment) => {
 	const diffInMs = now.getTime() - date.getTime()
 	const daysSinceCreation = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
 	if (segment.effort_count / daysSinceCreation <= THRESHHOLD.UNCONTESTET)
-		classification.push('Uncontestet')
-	else if (segment.effort_count >= THRESHHOLD.CONTESTET) classification.push('Contestet')
+		classification.push('Uncontested')
+	else if (segment.effort_count >= THRESHHOLD.CONTESTET) classification.push('Contested')
 	if (segment.average_grade > THRESHHOLD.CLIMB) classification.push('Climb')
 	else if (segment.average_grade < THRESHHOLD.DOWNHILL) classification.push('Downhill')
 	if (segment.distance > THRESHHOLD.OVERLONG) classification.push('Overlong')
@@ -79,33 +76,3 @@ const pathCurveAmount = (path: Line[], angleThreshold = 60): number => {
 	}
 	return curveAmount
 }
-
-/*const smoothBearings = (path: Line[], windowSize: number = 2): Line[] => {
-	if (path.length < 2) return path
-
-	const calculateWeightedAverageBearing = (index: number): number => {
-		const halfWindow = Math.floor(windowSize / 2)
-		let weightedSum = 0
-		let totalWeight = 0
-
-		for (let i = -halfWindow; i <= halfWindow; i++) {
-			const neighborIndex = index + i
-
-			if (neighborIndex >= 0 && neighborIndex < path.length) {
-				const { bearing, distance } = path[neighborIndex]
-
-				weightedSum += bearing * distance
-				totalWeight += distance
-			}
-		}
-
-		return totalWeight ? weightedSum / totalWeight : path[index].bearing
-	}
-
-	const smoothedPath = path.map((line, index) => ({
-		...line,
-		bearing: calculateWeightedAverageBearing(index),
-	}))
-
-	return smoothedPath
-}*/

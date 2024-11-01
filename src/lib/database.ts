@@ -12,7 +12,7 @@ export const setDatabase = async (path: string, payload: any): Promise<number> =
 	const post = await axios({
 		method: 'put',
 		url: process.env.DATABASE_URL + path + '.json',
-		data: payload,
+		data: JSON.stringify(payload),
 	})
 	return post.status
 }

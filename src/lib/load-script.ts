@@ -1,13 +1,12 @@
-import axios, { AxiosError } from 'axios'
-import { getPath } from './get-path'
-import { Segment } from '../../types'
-import { getClassification } from './classification'
+import { AxiosError } from 'axios'
+import { DetailedSegment } from '../../types'
 import { getFromDatabase, setDatabase } from './database'
+import { getDetailedSegment } from './get-detailed-segment'
 
 /**
  * Gathers a detailed version of all currently starred segments using a database as cache to relieve API rates.
  *
- * @returns {Segment[]} Array of detailed segments.
+ * @returns {DetailedSegment[]} Array of detailed segments.
  * @returns {number} Number of unique requests made to the Strava API.
  * @returns {number[]} ID list of segments which details couldn't be pulled (most likely due to API rates)
  * @returns {boolean} Flag if cache update succeeded.
@@ -15,7 +14,8 @@ import { getFromDatabase, setDatabase } from './database'
 
 export const loadScript = async () => {
 	let meteoRequestCount = 0,
-		stravaRequestCount = 0
+		stravaRequestCount = 0,
+		exceededRate = false
 
 	// Fetching stored access token and cached segments
 	const [dbSegRequest, stravaToken, dbOwnedKomsRequest] = await Promise.all([
@@ -41,7 +41,7 @@ export const loadScript = async () => {
 			)
 		}),
 	])
-	const dbSegments: Segment[] = dbSegRequest ? dbSegRequest : []
+	const dbSegments: DetailedSegment[] = dbSegRequest ? dbSegRequest : []
 	const ownedKomIds: number[] = dbOwnedKomsRequest ? dbOwnedKomsRequest : []
 
 	// Fetching starred segments
@@ -49,53 +49,44 @@ export const loadScript = async () => {
 		Authorization: 'Bearer ' + stravaToken,
 	}
 	stravaRequestCount++
-	const starredSegments = await axios({
-		method: 'get',
-		url: process.env.STRAVA_API + '/segments/starred?page=1&per_page=200',
-		headers: stravaAuth,
-	}).catch((err: AxiosError) => {
-		throw new Error(
-			`Error ${err.response!.status}: ${
-				err.response!.statusText
-			} - Couldn't retrieve starred segments from Strava`
-		)
+	const starredSegmentsRequest = await fetch(
+		process.env.STRAVA_API + '/segments/starred?page=1&per_page=200',
+		{
+			method: 'GET',
+			headers: stravaAuth,
+			next: { revalidate: 600 },
+		}
+	).catch((err) => {
+		throw new Error(`Error 401: Couldn't retrieve starred segments from Strava`)
 	})
+	const starredSegments = await starredSegmentsRequest.json()
 
 	// Checking which of the starred segments are already cached
-	const cachedSegments: Segment[] = []
-	const overflowIds: number[] = []
-	const newSegmentPromises: Promise<Segment | null>[] = []
+	const cachedSegments: DetailedSegment[] = []
+	let newSegments: DetailedSegment[] = []
+	const newSegmentPromises: Promise<DetailedSegment>[] = []
 
-	for (const starSeg of starredSegments.data) {
-		const cachedSeg = dbSegments.find((dbSeg: Segment) => dbSeg.id === starSeg.id)
+	for (const starSeg of starredSegments) {
+		const cachedSeg = dbSegments.find((dbSeg: DetailedSegment) => dbSeg.id === starSeg.id)
 		if (cachedSeg) cachedSegments.push(cachedSeg)
-		else {
-			// Wrap getDetailedSegment in a promise that handles errors and returns null if it fails
-			const segmentPromise = getDetailedSegment(starSeg.id, stravaAuth)
-				.then((segment) => {
-					stravaRequestCount++
-					return segment
-				})
-				.catch((err) => {
-					// Log the ID that failed
-					overflowIds.push(starSeg.id)
-					return null
-				})
-
-			newSegmentPromises.push(segmentPromise)
-		}
+		else newSegmentPromises.push(getDetailedSegment(starSeg.id, stravaAuth))
 	}
 
-	const newSegments = (await Promise.all(newSegmentPromises)).filter(
-		(segment): segment is Segment => segment !== null // Filter out any failed (null) segments
-	)
+	const settledSegmentPromises = await Promise.allSettled(newSegmentPromises)
+	newSegments = settledSegmentPromises
+		.filter((val) => {
+			const isFullfilled = val.status === 'fulfilled'
+			if (!isFullfilled) exceededRate = true
+			else stravaRequestCount++
+			return isFullfilled
+		})
+		.map((obj) => obj.value)
 
 	// Update the database (could make this update conditional)
-	const mergedSegmentsForUpdate: Segment[] = cachedSegments.concat(newSegments)
-	const updateStatus = setDatabase('tailwind/segments', mergedSegmentsForUpdate)
+	const mergedSegmentsForUpdate: DetailedSegment[] = cachedSegments.concat(newSegments)
+	const updateStatus = await setDatabase('tailwind/segments', mergedSegmentsForUpdate)
 
-	const mergedSegmentsWeather: Segment[] = []
-	//process.env.WEATHER_API_URL!
+	const mergedSegmentsWeather: DetailedSegment[] = []
 	for (const segment of mergedSegmentsForUpdate) {
 		const isOwnedKom = ownedKomIds.includes(segment.id)
 		const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
@@ -115,30 +106,7 @@ export const loadScript = async () => {
 		segments: mergedSegmentsWeather,
 		stravaRequestCount,
 		meteoRequestCount,
-		overflowIds,
-		updateStatus,
-	}
-}
-
-/**
- *  Fetches the details for a newly added segment. Surpresses rate exceeding error.
- * @param {number} id - The segment id.
- * @param {object} auth - The auth header for Strava.
- * @returns {Segment} - A detailed segment with the decoded polyline path and a classification
- */
-
-const getDetailedSegment = async (id: number, auth: object) => {
-	const segmentRequest = await axios({
-		method: 'get',
-		url: `${process.env.STRAVA_API}/segments/${id}`,
-		headers: auth,
-	})
-	const detailedSegment: Segment = {
-		...segmentRequest.data,
-		path: getPath(segmentRequest.data.map.polyline),
-	}
-	return {
-		...detailedSegment,
-		classification: getClassification(detailedSegment),
+		exceededRate,
+		updateStatus: updateStatus === 200,
 	}
 }

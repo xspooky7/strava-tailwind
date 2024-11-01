@@ -21,12 +21,12 @@ import {
 	WindIcon,
 } from 'lucide-react'
 import Image from 'next/image'
-import { Segment } from '../../types'
+import { DetailedSegment, Label } from '../../../../types'
 import { unstarSegment } from '@/lib/unstar-segment'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
-export const columns: ColumnDef<Segment>[] = [
+export const columns: ColumnDef<DetailedSegment>[] = [
 	{
 		accessorKey: 'isOwnedKom',
 		header: '',
@@ -58,8 +58,8 @@ export const columns: ColumnDef<Segment>[] = [
 		cell: ({ row }) => {
 			return (
 				<div className="flex space-x-2">
-					{row.original.classification &&
-						row.original.classification.slice(0, 2).map((c: string) => (
+					{row.original.labels &&
+						row.original.labels.slice(0, 2).map((c: Label) => (
 							<Badge key={c} variant="outline">
 								{c}
 							</Badge>
@@ -120,12 +120,14 @@ export const columns: ColumnDef<Segment>[] = [
 		header: 'Profile',
 		cell: ({ row }) => {
 			return (
-				<Image
-					src={row.original.elevation_profiles.light_url}
-					alt="nig"
-					width={112}
-					height={32}
-				/>
+				row.original.elevation_profiles && (
+					<Image
+						src={row.original.elevation_profiles.light_url}
+						alt="nig"
+						width={112}
+						height={32}
+					/>
+				)
 			)
 		},
 	},
