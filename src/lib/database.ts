@@ -1,18 +1,27 @@
-import axios from 'axios'
+export const getFromDatabase = async (path: string, settings?: Object): Promise<any> => {
+  const response = await fetch(`${process.env.DATABASE_URL}${path}.json`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    ...settings,
+  })
 
-export const getFromDatabase = async (path: string): Promise<any> => {
-	const request = await axios({
-		method: 'get',
-		url: process.env.DATABASE_URL + path + '.json',
-	})
-	return request.data
+  if (!response.ok) {
+    throw new Error(`Error fetching data: ${response.statusText}`)
+  }
+
+  return await response.json()
 }
 
 export const setDatabase = async (path: string, payload: any): Promise<number> => {
-	const post = await axios({
-		method: 'put',
-		url: process.env.DATABASE_URL + path + '.json',
-		data: JSON.stringify(payload),
-	})
-	return post.status
+  const response = await fetch(`${process.env.DATABASE_URL}${path}.json`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return response.status
 }

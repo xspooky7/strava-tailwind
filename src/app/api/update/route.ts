@@ -1,239 +1,299 @@
-import { getFromDatabase, setDatabase } from '@/lib/database'
-import axios from 'axios'
-import { headers } from 'next/headers'
-import { NextResponse } from 'next/server'
-import { ApiKom, DetailedSegment, Kom } from '../../../../types'
-import { getDetailedSegment } from '@/lib/get-detailed-segment'
+import { getFromDatabase, setDatabase } from "@/lib/database"
+import axios from "axios"
+import { headers } from "next/headers"
+import { NextResponse } from "next/server"
+import { getDetailedSegment } from "@/lib/get-detailed-segment"
+import PocketBase from "pocketbase"
+import { Collections, KomEffortRecord, SegmentRecord } from "../../../../pocketbase-types"
+import { sanatizeSegment } from "./sanatize"
 
+let DEBUG_LOG = ""
 export async function GET(req: Request) {
-	try {
-		/*const headersList = await headers()
+  try {
+    /*const headersList = await headers()
 	const apiKey = headersList.get('x-api-key')
 	if (apiKey !== process.env.UPDATE_API_KEY)
 		return new NextResponse('Unauthorized', { status: 401 })*/
+    const userId = "wivbmll48sinabq"
 
-		let DEBUG_LOG = '',
-			exceededRate = false,
-			stravaRequestCount = 0
-		const date = new Date()
-		const currentHour = (date.getUTCHours() + 1) % 24 //CEST
-		const currentMinute = date.getUTCMinutes()
+    let exceededRate = false,
+      stravaRequestCount = 0
+    const date = new Date()
+    const currentHour = (date.getUTCHours() + 1) % 24 //CEST
+    const currentMinute = date.getUTCMinutes()
 
-		if (currentHour < 7) {
-			return new NextResponse('Night', { status: 201 })
-		} else {
-			DEBUG_LOG += 'INIT - ' + currentHour + ':' + currentMinute + ' CEST'
-			const now = date.getTime()
+    if (currentHour < 7) {
+      return new NextResponse("Night", { status: 201 })
+    } else {
+      log(
+        `[INIT] ${currentHour < 10 ? "0" + currentHour : currentHour} : ${
+          currentMinute < 10 ? "0" + currentMinute : currentMinute
+        } CEST`
+      )
+      const now = date.getTime()
 
-			const [stravaToken, databaseIdReq] = await Promise.all([
-				getFromDatabase('token/access'),
-				getFromDatabase('ids'),
-			])
+      log(`[DATABASE] Fetching Strava Token `, false)
+      const stravaToken = await getFromDatabase("token/access", { cache: "no-store" })
+      if (!stravaToken)
+        return new NextResponse("Couldn't retrieve Strava Access Token", {
+          status: 400,
+        })
+      log(stravaToken)
+      log("[AUTH] Initializing Pocketbase")
+      const pb = new PocketBase(process.env.PB_URL)
+      await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
+      pb.autoCancellation(false)
 
-			if (!stravaToken)
-				return new NextResponse("Couldn't retrieve Strava Access Token", { status: 400 })
+      log("[DATABASE] Fetching Kom_Effort Collection")
+      const komEfforts: KomEffortRecord[] = await pb
+        .collection(Collections.KomEfforts)
+        .getFullList({ cache: "no-store" })
+      const dbIds = komEfforts.filter((effort) => effort.has_kom).map((obj: KomEffortRecord) => obj.segment_id)
+      const ownedKomIds: number[] = dbIds ? dbIds : []
+      log(`[INFO] Kom_Effort count: ${komEfforts.length}, active Koms: ${ownedKomIds.length}`)
+      const apiPromises = []
+      let apiResults = []
 
-			const databaseIds = databaseIdReq ? databaseIdReq : []
+      const p = komEfforts.length / 200
+      const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
-			const apiPromises = []
-			let apiResults = []
-			DEBUG_LOG += 'DatabaseID count: ' + databaseIds.length
+      log(`[API] Fetching ${max_pages} Kom Pages `, false)
+      for (let page = 1; page <= max_pages; page++) {
+        log(page + " ", false)
+        stravaRequestCount++
+        apiPromises.push(fetchKomPage(page, stravaToken))
+      }
+      try {
+        apiResults = await Promise.all(apiPromises)
+      } catch (error) {
+        return new NextResponse("Couldn't fetch Kom Lists", {
+          status: 400,
+        })
+      }
+      log("Success")
+      const apiIds: number[] = apiResults.reduce((acc, curr) => acc.concat(curr), [])
 
-			const p = databaseIds.length / 200
-			const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
+      if (!checkIdsEqual(ownedKomIds, apiIds)) {
+        const [lostKomIds, gainedKomIds] = arrDifference(ownedKomIds, apiIds)
+        log(`[CALC] Kom Difference: ${gainedKomIds.length} gained - ${lostKomIds.length} lost`)
+        if (lostKomIds.length) {
+          try {
+            log("[DATABASE] Processing lost koms", false)
+            for (const lostId of lostKomIds) {
+              log(lostId + ", ")
+              const effort = komEfforts.find((effort) => effort.segment_id === lostId)
+              if (effort == null || effort.id == null)
+                return new NextResponse(
+                  JSON.stringify({ message: "Couldn't resolve lost effort, which was expected", id: lostId }),
+                  { status: 400 }
+                )
+              const timeline = effort.lost_at ? effort.lost_at : []
+              await pb.collection(Collections.KomEfforts).update(
+                effort.id,
+                {
+                  lost_at: timeline.concat(now),
+                  has_kom: false,
+                },
+                { cache: "no-store" }
+              )
+              DEBUG_LOG += "Updated: " + lostId
+            }
+          } catch (err) {
+            return new NextResponse(
+              JSON.stringify({
+                message: "Error occured while updating an existing Kom_Effort Record (lost)",
+                ids: lostKomIds,
+                originalError: err,
+              }),
+              { status: 400 }
+            )
+          }
+          log("Success")
+        }
+        /**
+         * Case Gained #1:
+         * Gained a Kom which is already a past Kom-Effort. Both records are already present.
+         */
+        if (gainedKomIds.length) {
+          const restIds = []
+          for (const gainedId of gainedKomIds) {
+            const storedEffort = komEfforts.find((effort) => effort.segment_id === gainedId)
+            if (storedEffort) {
+              log(`[INFO] Processing ${gainedId} (gained#1)`)
+              const timeline = storedEffort.gained_at ? storedEffort.gained_at : []
+              try {
+                log(
+                  `[DATABASE] Updating Kom_Effort Record status to true (segment_id:${storedEffort.segment_id}, segment_ref:${storedEffort.id})`
+                )
+                await pb.collection(Collections.KomEfforts).update(
+                  storedEffort.id,
+                  {
+                    gained_at: timeline.concat(now),
+                    has_kom: true,
+                  },
+                  { cache: "no-store" }
+                )
+              } catch (err) {
+                return new NextResponse(
+                  JSON.stringify({
+                    message: "Error occured while updating a present Kom_Effort Record (gained#1)",
+                    ids: gainedId,
+                    originalError: err,
+                  }),
+                  { status: 400 }
+                )
+              }
+            } else {
+              restIds.push(gainedId)
+            }
+          }
+          if (restIds.length) {
+            let segments: SegmentRecord[] = await pb.collection(Collections.Segments).getFullList({ cache: "no-store" })
+            const segIds = new Set(segments.map((segment: SegmentRecord) => segment.segment_id))
 
-			DEBUG_LOG += 'Fetching Kom Pages' + ' - AUTH: ' + stravaToken
-			for (let page = 1; page <= max_pages; page++) {
-				DEBUG_LOG += 'Page ' + page
-				stravaRequestCount++
-				apiPromises.push(fetchKomPage(page, stravaToken))
-			}
-			try {
-				apiResults = await Promise.all(apiPromises)
-			} catch (error) {
-				if (error instanceof Error) {
-					return new NextResponse(error.message, {
-						status: 400,
-					})
-				} else {
-					return new NextResponse('d', {
-						status: 400,
-					})
-				}
-			}
+            //newIds: gained segments not yet commited to any collection
+            const newIds = restIds.filter((x) => !segIds.has(x))
 
-			const [apiData, apiIds] = apiResults.reduce((a, b) => [
-				a[0].concat(b[0]),
-				a[1].concat(b[1]),
-			])
+            /**
+             * Case Gained #2:
+             * Gained an unknown Kom and unknown segment. Both records have to be created.
+             */
+            if (newIds.length) {
+              log("[INFO] Processing gained koms (gained#2)")
+              const newSegmentPromises: Promise<any>[] = newIds.map((newId: number) => {
+                return getDetailedSegment(newId, {
+                  Authorization: "Bearer " + stravaToken,
+                })
+              })
 
-			const updatePromises = []
+              const settledSegmentPromises = await Promise.allSettled(newSegmentPromises)
+              const newSegments = settledSegmentPromises
+                .filter((val) => {
+                  const isFullfilled = val.status === "fulfilled"
+                  if (!isFullfilled) {
+                    exceededRate = true
+                  } else stravaRequestCount++
+                  return isFullfilled
+                })
+                .map((obj) => sanatizeSegment(obj.value))
+              try {
+                const newRecords = await Promise.all(
+                  newSegments.map((seg: SegmentRecord) => {
+                    log(`[DATABASE] Creating Segment Record (${seg.segment_id})`)
+                    return pb.collection(Collections.Segments).create(seg, { cache: "no-store" })
+                  })
+                )
+                await Promise.all(
+                  newRecords.map((rec: any) => {
+                    log(`[DATABASE] Creating Kom_Effort Record (segment_id:${rec.segment_id}, segment_ref:${rec.id})`)
+                    return pb.collection(Collections.KomEfforts).create(
+                      {
+                        segment: rec.id,
+                        user: userId,
+                        segment_id: rec.segment_id,
+                        gained_at: [now],
+                        has_kom: true,
+                      },
+                      { cache: "no-store" }
+                    )
+                  })
+                )
+              } catch (err) {
+                return new NextResponse(
+                  JSON.stringify({
+                    message: "Error occured while creating a new Segment and Kom_Effort (gained#2)",
+                    originalError: err,
+                  }),
+                  { status: 400 }
+                )
+              }
+              log(`[INFO] Success! Created ${newSegments.length} new Segment and Kom_Effort Record(s)`)
+            }
 
-			if (!checkIdsEqual(databaseIds, apiIds)) {
-				let snapshot
-				try {
-					snapshot = await getFromDatabase('snapshot')
-				} catch (error) {
-					return new NextResponse("Couldn't retrieve Segments from Database ", {
-						status: 400,
-					})
-				}
-				const [lostKomIds, gainedKomIds] = calcKomDifference(databaseIds, apiIds)
+            /**
+             * Case Gained #3:
+             * Gained Kom which is not yet a Kom_Record but it's Segment is already saved
+             */
+            const alreadyCachedSegIds = restIds.filter((x) => !newIds.includes(x))
+            if (alreadyCachedSegIds.length) {
+              log("[INFO] Processing gained koms (gained#3)")
+              for (const gainedId of alreadyCachedSegIds) {
+                const cachedSegment = segments.find((seg) => seg.segment_id === gainedId)
+                try {
+                  log(
+                    `[DATABASE] Creating Kom_Effort Record (segment_id:${cachedSegment!.segment_id}, segment_ref:${
+                      cachedSegment!.id
+                    })`
+                  )
+                  await pb.collection(Collections.KomEfforts).create(
+                    {
+                      segment: cachedSegment!.id,
+                      user: userId,
+                      segment_id: cachedSegment!.segment_id,
+                      gained_at: [now],
+                      has_kom: true,
+                    },
+                    { cache: "no-store" }
+                  )
+                } catch (err) {
+                  return new NextResponse(
+                    JSON.stringify({
+                      message: "Error occured while creating a new Kom_Effort Record (gained#3)",
+                      ids: gainedId,
+                      originalError: err,
+                    }),
+                    { status: 400 }
+                  )
+                }
+              }
+              log(`[INFO] Success! Created ${alreadyCachedSegIds.length} new Kom_Effort Record(s)`)
+            }
+          }
+        }
+        // TODO timeline update
+        // TODO Kom amount update
+      } // end (!checkIdsEqual(databaseIds, apiIds))
+      log(`[INFO] Requests to Strava - ${stravaRequestCount}, Rate exceeded - ${exceededRate}`)
 
-				if (lostKomIds.length) {
-					lostKomIds.forEach((lostId: number) => {
-						const index = snapshot.findIndex((segment: any) => segment.id === lostId)
-						DEBUG_LOG += 'Lost: ' + snapshot[index].id
-						if (snapshot[index].lost) {
-							snapshot[index].lost.push(now)
-						} else snapshot[index].lost = [now]
-					})
-				}
-				if (gainedKomIds.length) {
-					const detailedSegmentPromises: Promise<DetailedSegment>[] = gainedKomIds.map(
-						(gainedId: number) => {
-							return getDetailedSegment(gainedId, {
-								Authorization: 'Bearer ' + stravaToken,
-							})
-						}
-					)
-
-					const settledSegmentPromises = await Promise.allSettled(detailedSegmentPromises)
-					const detailedSegments = settledSegmentPromises
-						.filter((val) => {
-							const isFullfilled = val.status === 'fulfilled'
-							if (!isFullfilled) exceededRate = true
-							else stravaRequestCount++
-							return isFullfilled
-						})
-						.map((obj) => obj.value)
-
-					gainedKomIds.forEach((gainedId: number) => {
-						const apiIndex = apiData.findIndex(
-							(segment: ApiKom) => segment.id === gainedId
-						)
-						const snapIndex = snapshot.findIndex(
-							(segment: Kom) => segment.id === gainedId
-						)
-						const detailedSegment = detailedSegments.find((seg) => seg.id === gainedId)
-
-						DEBUG_LOG += 'Gained: ' + apiData[apiIndex].id
-						if (detailedSegment) {
-							if (snapIndex > -1) {
-								if (snapshot[snapIndex].gained) {
-									snapshot[snapIndex].gained.push(now)
-								} else snapshot[snapIndex].gained = [now]
-							} else
-								snapshot.push({
-									...apiData[apiIndex],
-									...detailedSegment,
-									gained: [now],
-								})
-						}
-					})
-				}
-
-				const updatedSnapshotIds = snapshot.map((kom: Kom) => kom.id)
-				DEBUG_LOG +=
-					'Pushing Database Updates: <br>    IDs: ' +
-					updatedSnapshotIds.length +
-					'<br>    Date: ' +
-					new Date(now).toDateString()
-
-				const komAmount = apiIds.length
-				updatePromises.push(
-					setDatabase('snapshot', snapshot),
-					setDatabase('ids', updatedSnapshotIds),
-					setDatabase('history/' + new Date(now).toDateString(), komAmount),
-					setDatabase('komAmount', komAmount)
-				)
-			}
-			updatePromises.push(setDatabase('snapdate', now))
-			DEBUG_LOG += 'Requests: ' + stravaRequestCount + ' - Rate exceeded: ' + exceededRate
-			try {
-				Promise.all(updatePromises)
-			} catch (error) {
-				return new NextResponse("Couldn't successfully push updates", { status: 400 })
-			}
-			return new NextResponse(DEBUG_LOG, { status: 200 })
-		}
-	} catch (error) {
-		if (error instanceof Error) {
-			return new NextResponse(error.message, {
-				status: 400,
-			})
-		} else {
-			return new NextResponse('idk', {
-				status: 400,
-			})
-		}
-	}
-}
-
-// HELPER FUNCTIONS
-const checkIdsEqual = (idArr1: number[], idArr2: number[]) => {
-	return idArr1.sort().join('') === idArr2.sort().join('')
-}
-
-const calcKomDifference = (past: number[], present: number[]) => {
-	return [past.filter((x) => !present.includes(x)), present.filter((y) => !past.includes(y))]
+      return new NextResponse(DEBUG_LOG, { status: 200 })
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return new NextResponse(error.message, {
+        status: 400,
+      })
+    } else {
+      return new NextResponse("Unknown Error in Route", {
+        status: 400,
+      })
+    }
+  }
 }
 
 //STRAVA API FUNCTION
-const fetchKomPage = async (page: number, token: string): Promise<[ApiKom[], number[]]> => {
-	const response = await axios({
-		method: 'GET',
-		url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
-		headers: { Authorization: 'Bearer ' + token },
-	})
+const fetchKomPage = async (page: number, token: string): Promise<number[]> => {
+  const response = await axios({
+    method: "GET",
+    url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
+    headers: { Authorization: "Bearer " + token, "Cache-Control": "no-store" },
+  })
 
-	const segments = response.data ? response.data : []
-	const idArray: number[] = []
-	const formattedResponse: ApiKom[] = segments.map((entry: any) => {
-		idArray.push(entry.segment.id)
-		return {
-			id: entry.segment.id,
-			elapsed_time: entry.elapsed_time,
-			moving_time: entry.moving_time,
-			start_date: entry.start_date,
-			start_date_local: entry.start_date_local,
-			distance: entry.distance,
-			start_index: entry.start_index,
-			end_index: entry.end_index,
-			average_cadence: entry.average_cadence,
-			device_watts: entry.device_watts,
-			average_watts: entry.average_watts,
-			average_heartrate: entry.average_heartrate,
-			max_heartrate: entry.max_heartrate,
-			achievements: entry.achievements,
-		}
-	})
+  const segments = response.data ? response.data : []
+  const idArray: number[] = segments.map((entry: any) => entry.segment.id)
 
-	return [formattedResponse, idArray]
+  return idArray
 }
 
-/* const token = await getFromDatabase('token/access')
-			const apiPromises = []
-			let apiResults = []
-			for (let page = 1; page <= 20; page++) {
-				apiPromises.push(fetchKomPage(page, token))
-			}
-			try {
-				apiResults = await Promise.all(apiPromises)
-			} catch (error) {
-				if (error instanceof Error) {
-					return new NextResponse(error.message, {
-						status: 400,
-					})
-				} else {
-					return new NextResponse('d', {
-						status: 400,
-					})
-				}
-			}
-			const [apiData, apiIds] = apiResults.reduce((a, b) => [
-				a[0].concat(b[0]),
-				a[1].concat(b[1]),
-			])
+// HELPER FUNCTIONS
+const checkIdsEqual = (idArr1: number[], idArr2: number[]): boolean => {
+  return idArr1.sort().join("") === idArr2.sort().join("")
+}
 
-			const status = await setDatabase('snapshot2', apiData)*/
+const arrDifference = (arr1: number[], arr2: number[]): number[][] => {
+  return [arr1.filter((x) => !arr2.includes(x)), arr2.filter((y) => !arr1.includes(y))]
+}
+
+const log = (message: string, newline = true, payload?: object) => {
+  console.log(message)
+  DEBUG_LOG += `- ${message}${newline ? "\n" : ""}`
+}

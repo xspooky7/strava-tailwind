@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Cross2Icon } from '@radix-ui/react-icons'
-import { Table } from '@tanstack/react-table'
-import { TableFacetedFilter } from './table-faceted-filter'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Cross2Icon } from "@radix-ui/react-icons"
+import { Table } from "@tanstack/react-table"
+import { TableFacetedFilter } from "./table-faceted-filter"
 
 interface DataTableToolbarProps<TData> {
 	table: Table<TData>
@@ -18,24 +18,24 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
 			<div className="flex flex-1 items-center space-x-2">
 				<Input
 					placeholder="Filter tasks..."
-					value={(table.getColumn('title')?.getFilterValue() as string) ?? ''}
+					value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
 					onChange={(event) =>
-						table.getColumn('title')?.setFilterValue(event.target.value)
+						table.getColumn("title")?.setFilterValue(event.target.value)
 					}
 					className="h-8 w-[150px] lg:w-[250px]"
 				/>
-				{table.getColumn('status') && (
+				{table.getColumn("status") && (
 					<TableFacetedFilter
-						column={table.getColumn('status')}
+						column={table.getColumn("status")}
 						title="Status"
-						options={statuses}
+						options={[]}
 					/>
 				)}
-				{table.getColumn('priority') && (
+				{table.getColumn("priority") && (
 					<TableFacetedFilter
-						column={table.getColumn('priority')}
+						column={table.getColumn("priority")}
 						title="Priority"
-						options={priorities}
+						options={[]}
 					/>
 				)}
 				{isFiltered && (

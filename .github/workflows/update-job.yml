@@ -1,0 +1,15 @@
+name: update-job
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+jobs:
+  updater:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Database
+        run: |
+          response=$(curl -s -X GET ${{secrets.UPDATE_URL}} \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{secrets.UPDATE_TOKEN}}")
+
+          echo "API Response: $response"
