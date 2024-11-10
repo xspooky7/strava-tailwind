@@ -39,7 +39,7 @@ export async function GET(req: Request) {
         return new NextResponse("Couldn't retrieve Strava Access Token", {
           status: 400,
         })
-      log(stravaToken)
+      log("Success")
       log("[AUTH] Initializing Pocketbase")
       await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
       pb.autoCancellation(false)
