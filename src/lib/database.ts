@@ -25,3 +25,19 @@ export const setDatabase = async (path: string, payload: any): Promise<number> =
 
   return response.status
 }
+
+export const getStravaToken = async (): Promise<string> => {
+  const response = await fetch(`${process.env.ACCESS_TOKEN_URL}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error("Error occured while fetching Strava access token")
+  }
+
+  return response.json()
+}

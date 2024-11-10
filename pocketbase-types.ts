@@ -11,6 +11,7 @@ export enum Collections {
   KomEfforts = "kom_efforts",
   Segments = "segments",
   Users = "users",
+  KomTimeseries = "kom_timeseries",
 }
 
 // Alias types for improved usability
@@ -47,14 +48,23 @@ export type EffortDetailRecord = {
   start_date?: string
 }
 
+export type KomTimeseriesRecord = {
+  id?: string
+  user: RecordIdString
+  date: string
+  amount: number
+}
+
 export type KomEffortRecord = {
-  id: string
+  id?: string
   effort_detail?: RecordIdString
+  user: RecordIdString
   segment: RecordIdString
   segment_id: number
   gained_at?: number[]
   lost_at?: number[]
   has_kom: boolean
+  is_starred: boolean
 }
 
 export type SegmentRecord = {

@@ -2,19 +2,21 @@ import { getFromDatabase, setDatabase } from "@/lib/database"
 import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { getDetailedSegment } from "@/lib/get-detailed-segment"
-import PocketBase from "pocketbase"
-import { Collections, KomEffortRecord, SegmentRecord } from "../../../../pocketbase-types"
-import { sanatizeSegment } from "./sanatize"
+import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
+import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
+import pb from "@/lib/pocketbase"
+
+export const maxDuration = 30
 
 let DEBUG_LOG = ""
 export async function GET(req: Request) {
+  DEBUG_LOG = ""
   try {
     /*const headersList = await headers()
 	const apiKey = headersList.get('x-api-key')
 	if (apiKey !== process.env.UPDATE_API_KEY)
 		return new NextResponse('Unauthorized', { status: 401 })*/
-    const userId = "wivbmll48sinabq"
+    const userId = process.env.USER_ID!
 
     let exceededRate = false,
       stravaRequestCount = 0
@@ -40,7 +42,6 @@ export async function GET(req: Request) {
         })
       log(stravaToken)
       log("[AUTH] Initializing Pocketbase")
-      const pb = new PocketBase(process.env.PB_URL)
       await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
       pb.autoCancellation(false)
 
@@ -57,9 +58,8 @@ export async function GET(req: Request) {
       const p = komEfforts.length / 200
       const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
-      log(`[API] Fetching ${max_pages} Kom Pages `, false)
+      log(`[API] Fetching ${max_pages} Kom Pages `)
       for (let page = 1; page <= max_pages; page++) {
-        log(page + " ", false)
         stravaRequestCount++
         apiPromises.push(fetchKomPage(page, stravaToken))
       }
@@ -70,7 +70,7 @@ export async function GET(req: Request) {
           status: 400,
         })
       }
-      log("Success")
+      log("[API]Success")
       const apiIds: number[] = apiResults.reduce((acc, curr) => acc.concat(curr), [])
 
       if (!checkIdsEqual(ownedKomIds, apiIds)) {
@@ -126,7 +126,7 @@ export async function GET(req: Request) {
                   `[DATABASE] Updating Kom_Effort Record status to true (segment_id:${storedEffort.segment_id}, segment_ref:${storedEffort.id})`
                 )
                 await pb.collection(Collections.KomEfforts).update(
-                  storedEffort.id,
+                  storedEffort.id!,
                   {
                     gained_at: timeline.concat(now),
                     has_kom: true,
@@ -160,10 +160,8 @@ export async function GET(req: Request) {
              */
             if (newIds.length) {
               log("[INFO] Processing gained koms (gained#2)")
-              const newSegmentPromises: Promise<any>[] = newIds.map((newId: number) => {
-                return getDetailedSegment(newId, {
-                  Authorization: "Bearer " + stravaToken,
-                })
+              const newSegmentPromises: Promise<SegmentRecord>[] = newIds.map((newId: number) => {
+                return fetchNewSegmentRecord(newId, stravaToken)
               })
 
               const settledSegmentPromises = await Promise.allSettled(newSegmentPromises)
@@ -175,7 +173,8 @@ export async function GET(req: Request) {
                   } else stravaRequestCount++
                   return isFullfilled
                 })
-                .map((obj) => sanatizeSegment(obj.value))
+                .map((res) => res.value)
+
               try {
                 const newRecords = await Promise.all(
                   newSegments.map((seg: SegmentRecord) => {
@@ -250,10 +249,26 @@ export async function GET(req: Request) {
             }
           }
         }
-        // TODO timeline update
+        try {
+          const amount = ownedKomIds.length + gainedKomIds.length - lostKomIds.length
+          const dateString = date.toISOString()
+          const newTimeseries: KomTimeseriesRecord = {
+            user: userId,
+            date: dateString,
+            amount,
+          }
+          const seriesUpdate = pb.collection(Collections.KomTimeseries).create(newTimeseries, { cache: "no-store" })
+          log(`[DATABASE] Updated Timeseries: ${amount} - ${dateString}`)
+        } catch (err) {
+          log(`[WARNING] Failed to update timeseries`)
+        }
+
         // TODO Kom amount update
-      } // end (!checkIdsEqual(databaseIds, apiIds))
-      log(`[INFO] Requests to Strava - ${stravaRequestCount}, Rate exceeded - ${exceededRate}`)
+      } else {
+        log("[INFO] Arrays are equal")
+      }
+      log(`[INFO] Requests made to Strava - ${stravaRequestCount}, Rate exceeded - ${exceededRate}`)
+      log("[EXIT] 200")
 
       return new NextResponse(DEBUG_LOG, { status: 200 })
     }
@@ -276,9 +291,11 @@ const fetchKomPage = async (page: number, token: string): Promise<number[]> => {
     method: "GET",
     url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
     headers: { Authorization: "Bearer " + token, "Cache-Control": "no-store" },
+    timeout: 15000,
   })
 
   const segments = response.data ? response.data : []
+  log(`  - ${page} (${segments.length})`)
   const idArray: number[] = segments.map((entry: any) => entry.segment.id)
 
   return idArray
@@ -295,5 +312,5 @@ const arrDifference = (arr1: number[], arr2: number[]): number[][] => {
 
 const log = (message: string, newline = true, payload?: object) => {
   console.log(message)
-  DEBUG_LOG += `- ${message}${newline ? "\n" : ""}`
+  DEBUG_LOG += `${message}${newline ? "\n" : ""}`
 }

@@ -3,7 +3,7 @@ on:
   schedule:
     - cron: "*/30 * * * *"
 jobs:
-  updater:
+  kom-update:
     runs-on: ubuntu-latest
     steps:
       - name: Update Database

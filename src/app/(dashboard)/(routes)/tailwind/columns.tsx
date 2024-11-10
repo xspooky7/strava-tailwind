@@ -21,19 +21,19 @@ import {
   WindIcon,
 } from "lucide-react"
 import Image from "next/image"
-import { DetailedSegment, Label } from "../../../../../types"
+import { Label, WeatherSegment } from "../../../../../types"
 import { unstarSegment } from "@/lib/unstar-segment"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
-export const columns: ColumnDef<DetailedSegment>[] = [
+export const columns: ColumnDef<WeatherSegment>[] = [
   {
     accessorKey: "isOwnedKom",
     header: "",
     cell: ({ row }) => {
       let crownColor = "text-muted"
       if (row.original.isOwnedKom) crownColor = "text-amber-400"
-      else if (!row.original.xoms.qom) crownColor = "text-pink-300"
+      else if (!row.original.leader_qom) crownColor = "text-pink-300"
       return (
         <div className="flex justify-center">
           <CrownIcon className={"h-5 w-5 " + crownColor} />
@@ -45,11 +45,7 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     accessorKey: "name",
     header: ({ column }) => {
       return (
-        <Button
-          className="-ml-4"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           Name
           <ChevronsUpDownIcon className="h-2 w-2" />
         </Button>
@@ -73,11 +69,7 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     accessorKey: "city",
     header: ({ column }) => {
       return (
-        <Button
-          className="-ml-4"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           City
           <ChevronsUpDownIcon className="h-2 w-2" />
         </Button>
@@ -91,11 +83,7 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     accessorKey: "terrain",
     header: ({ column }) => {
       return (
-        <Button
-          className="-ml-4"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           Terrain
           <ChevronsUpDownIcon className="h-2 w-2" />
         </Button>
@@ -103,8 +91,7 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     },
     cell: ({ row }) => {
       let distance = Math.round(row.original.distance) + "m"
-      if (distance.length > 4)
-        distance = Math.round(row.original.distance / 100) / 10 + "km"
+      if (distance.length > 4) distance = Math.round(row.original.distance / 100) / 10 + "km"
       return (
         <div className="flex space-x-2 items-center">
           <ChevronsLeftRightEllipsisIcon className="h-4 w-4 text-muted-foreground" />
@@ -120,44 +107,29 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     accessorKey: "profile",
     header: "Profile",
     cell: ({ row }) => {
-      return (
-        row.original.elevation_profiles && (
-          <Image
-            src={row.original.elevation_profiles.light_url}
-            alt="nig"
-            width={112}
-            height={32}
-          />
-        )
-      )
+      return <Image src={row.original.profile_url_light!} alt="nig" width={112} height={32} />
     },
   },
   {
     accessorKey: "tail",
     header: ({ column }) => {
       return (
-        <Button
-          className="-ml-4"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           Tailwind
           <ChevronsUpDownIcon className="h-2 w-2" />
         </Button>
       )
     },
-    accessorFn: (row) => row.wind.tail,
+    accessorFn: (row) => row.wind!.tail,
     cell: ({ row }) => {
-      const color = row.original.wind.tail >= 90 ? "" : ""
+      const color = row.original.wind!.tail >= 90 ? "" : ""
       return (
         <div className="flex space-x-2 items-center">
           <WindIcon className="h-4 w-4 text-muted-foreground" />
-          <span>{Math.round(row.original.wind.avgTailwindSpeed)}km/h</span>
+          <span>{Math.round(row.original.wind!.avgTailwindSpeed)}km/h</span>
           <Separator orientation="vertical" className="h-4" />
           <PercentIcon className={"h-4 w-4 text-muted-foreground" + color} />
-          <span className={"ml-3 text-primary" + color}>
-            {Math.round(row.original.wind.tail)}
-          </span>
+          <span className={"ml-3 text-primary" + color}>{Math.round(row.original.wind!.tail)}</span>
         </div>
       )
     },
@@ -179,17 +151,13 @@ export const columns: ColumnDef<DetailedSegment>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() =>
-                window.open(
-                  "https://www.strava.com/segments/" + row.original.id,
-                  "_blank",
-                  "noopener,noreferrer"
-                )
+                window.open("https://www.strava.com/segments/" + row.original.id, "_blank", "noopener,noreferrer")
               }
             >
               <SquareChevronRight className="h-4 w-4" />
               View on Strava
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => unstarSegment(row.original.id)}>
+            <DropdownMenuItem onClick={() => unstarSegment(row.original.segment_id)}>
               <StarOffIcon className="h-4 w-4" />
               Unstar Segment
             </DropdownMenuItem>

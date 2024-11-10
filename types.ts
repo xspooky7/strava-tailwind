@@ -21,7 +21,18 @@ export type Label =
   | "Contested"
   | "Uncontested"
 
-export interface Segment extends SegmentRecord {
+export type WeatherResponse = {
+  path: Line[]
+  wind: {
+    tail: number
+    cross: number
+    head: number
+    avgTailwindSpeed: number
+  }
+  meteoRequests: number
+}
+
+export interface WeatherSegment extends SegmentRecord {
   wind?: {
     tail: number
     cross: number

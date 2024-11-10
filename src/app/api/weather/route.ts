@@ -1,18 +1,7 @@
 import { NextResponse } from "next/server"
 import { fetchWeatherApi } from "openmeteo"
-import { Coordinate, Line } from "../../../../types"
+import { Coordinate, Line, WeatherResponse } from "../../../../types"
 import { WEATHER_QUERY_INTERVAL } from "../../../../constants"
-
-type WeatherResponse = {
-  path: Line[]
-  wind: {
-    tail: number
-    cross: number
-    head: number
-    avgTailwindSpeed: number
-  }
-  meteoRequests: number
-}
 
 /**
  * Takes a polyline and transforms it into an array of lines
@@ -24,16 +13,10 @@ type WeatherResponse = {
 export async function POST(req: Request) {
   const path: Line[] = await req.json()
   let meteoRequests = 0
-  const aggregateDistance: number = path.reduce(
-    (prev, curr) => prev + curr.distance,
-    0
-  )
+  const aggregateDistance: number = path.reduce((prev, curr) => prev + curr.distance, 0)
   const meteoRequestPromises = []
 
-  const ranges = createRanges(
-    aggregateDistance,
-    Math.ceil(aggregateDistance / WEATHER_QUERY_INTERVAL)
-  )
+  const ranges = createRanges(aggregateDistance, Math.ceil(aggregateDistance / WEATHER_QUERY_INTERVAL))
 
   let range = 0,
     d = 0
@@ -61,14 +44,11 @@ export async function POST(req: Request) {
 
   for (let i = 0; i < path.length; i++) {
     const line: Line = path[i]
-    const angleDifference = Math.abs(
-      line.bearing - weatherData[line.weatherRef!].current.windDirection10m
-    )
+    const angleDifference = Math.abs(line.bearing - weatherData[line.weatherRef!].current.windDirection10m)
 
     if (angleDifference <= 45) {
       tailAbs += line.distance
-      aggregateWindspeed +=
-        line.distance * weatherData[line.weatherRef!].current.windSpeed10m
+      aggregateWindspeed += line.distance * weatherData[line.weatherRef!].current.windSpeed10m
     } else if (angleDifference <= 135) crossAbs += line.distance
     else headAbs += line.distance
 
@@ -106,13 +86,7 @@ const meteoRequest = async (coord: Coordinate) => {
   const params = {
     latitude: coord[0],
     longitude: coord[1],
-    current: [
-      "temperature_2m",
-      "weather_code",
-      "wind_speed_10m",
-      "wind_direction_10m",
-      "wind_gusts_10m",
-    ],
+    current: ["temperature_2m", "weather_code", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"],
     timezone: "Europe/Berlin",
     forecast_days: 1,
   }

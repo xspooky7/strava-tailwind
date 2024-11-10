@@ -1,15 +1,15 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { TableColumnHeader } from "./table-column-header"
-import { priorities, statuses } from "./metadata"
+import { priorities } from "./metadata"
 import { TableRowActions } from "./table-row-action"
-import { DetailedSegment, Label } from "../../../../../../types"
-import { StarIcon } from "lucide-react"
+import { MinusIcon, PlusIcon, StarIcon } from "lucide-react"
+import { KomEffortRecord, SegmentRecord } from "../../../../../../pocketbase-types"
+import { Label } from "../../../../../../types"
 
-export const columns: ColumnDef<DetailedSegment>[] = [
+export const columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRecord } }>[] = [
   {
     id: "star",
     header: "",
@@ -22,10 +22,10 @@ export const columns: ColumnDef<DetailedSegment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "title",
+    accessorKey: "name",
     header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
-      const labels = row.original.labels
+      const labels = row.original.expand.segment.labels
       return (
         <div className="flex space-x-2">
           {labels &&
@@ -34,49 +34,49 @@ export const columns: ColumnDef<DetailedSegment>[] = [
                 {c}
               </Badge>
             ))}
-          <span className="max-w-[500px] truncate font-medium">
-            {row.original.name}
-          </span>
+          <span className="max-w-[500px] truncate font-medium">{row.original.expand.segment.name}</span>
         </div>
       )
     },
   },
   {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <TableColumnHeader column={column} title="Status" />
-    ),
+    accessorKey: "city",
+    header: ({ column }) => <TableColumnHeader column={column} title="City" />,
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      )
-
-      if (!status) {
-        return null
-      }
-
-      return (
-        <div className="flex w-[100px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
-        </div>
-      )
+      return <span>{row.original.expand.segment.city}</span>
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+  },
+
+  {
+    accessorKey: "status",
+    header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
+    cell: ({ row }) => {
+      let status = ""
+      if (row.original.has_kom) {
+        if (row.original.gained_at) status = "Gained"
+      } else if (row.original.lost_at) status = "Lost"
+
+      const bubble =
+        status === "Gained" ? (
+          <>
+            <PlusIcon className="mr-2 h-4 w-4 text-green-400" />
+            <span className="text-green-400">Gained</span>
+          </>
+        ) : (
+          <>
+            <MinusIcon className="mr-2 h-4 w-4 text-red-400" />
+            <span className="text-red-400">Lost</span>
+          </>
+        )
+
+      return <div className="flex w-3 items-center">{bubble}</div>
     },
   },
   {
     accessorKey: "priority",
-    header: ({ column }) => (
-      <TableColumnHeader column={column} title="Priority" />
-    ),
+    header: ({ column }) => <TableColumnHeader column={column} title="Priority" />,
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      )
+      const priority = priorities.find((priority) => priority.value === row.getValue("priority"))
 
       if (!priority) {
         return null
@@ -84,15 +84,10 @@ export const columns: ColumnDef<DetailedSegment>[] = [
 
       return (
         <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
+          {priority.icon && <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
           <span>{priority.label}</span>
         </div>
       )
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
     },
   },
   {

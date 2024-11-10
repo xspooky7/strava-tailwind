@@ -1,30 +1,18 @@
 "use client"
 
 import * as React from "react"
-import {
-  CrownIcon,
-  LayoutDashboardIcon,
-  Settings2,
-  WindIcon,
-} from "lucide-react"
+import { BikeIcon, CrownIcon, LayoutDashboardIcon, Settings2, WindIcon } from "lucide-react"
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-} from "../ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "../ui/sidebar"
 
 // This is sample data.
 const data = {
   user: {
     name: "Sporty Angie",
     email: "nosey-angie@example.com",
-    avatar:
-      "https://dgalywyr863hv.cloudfront.net/pictures/athletes/21856708/12405558/1/large.jpg",
+    avatar: "https://dgalywyr863hv.cloudfront.net/pictures/athletes/21856708/12405558/1/large.jpg",
   },
   navMain: [
     {
@@ -79,7 +67,9 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>Logo+Name</SidebarHeader>
+      <SidebarHeader>
+        <BikeIcon />
+      </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
