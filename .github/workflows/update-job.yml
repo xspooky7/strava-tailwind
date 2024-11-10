@@ -10,6 +10,6 @@ jobs:
         run: |
           response=$(curl -s -X GET ${{secrets.UPDATE_URL}} \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{secrets.UPDATE_TOKEN}}")
+            -H "x-api-key: ${{secrets.UPDATE_KEY}}")
 
           echo "API Response: $response"

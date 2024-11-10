@@ -1,4 +1,4 @@
-import { getFromDatabase, setDatabase } from "@/lib/database"
+import { getFromDatabase } from "@/lib/database"
 import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
@@ -12,10 +12,9 @@ let DEBUG_LOG = ""
 export async function GET(req: Request) {
   DEBUG_LOG = ""
   try {
-    /*const headersList = await headers()
-	const apiKey = headersList.get('x-api-key')
-	if (apiKey !== process.env.UPDATE_API_KEY)
-		return new NextResponse('Unauthorized', { status: 401 })*/
+    const headersList = await headers()
+    const apiKey = headersList.get("x-api-key")
+    if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
     const userId = process.env.USER_ID!
 
     let exceededRate = false,
