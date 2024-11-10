@@ -8,7 +8,6 @@ import pb from "@/lib/pocketbase"
 
 const KomPage = async () => {
   await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
-  pb.autoCancellation(false)
   const promises: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
     .collection(Collections.KomEfforts)
     .getFullList({
