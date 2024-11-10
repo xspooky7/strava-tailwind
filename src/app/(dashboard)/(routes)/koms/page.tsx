@@ -14,7 +14,7 @@ const KomPage = async () => {
     .getFullList({
       filter: "has_kom=true && (gained_at != null || lost_at != null)",
       expand: "segment",
-      revalidate: 120,
+      next: { revalidate: 120 },
     })
 
   return (
