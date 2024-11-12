@@ -1,7 +1,7 @@
 name: update-job
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
 jobs:
   kom-update:
     runs-on: ubuntu-latest
