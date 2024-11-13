@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       try {
         apiResults = await Promise.all(apiPromises)
       } catch (error) {
-        return new NextResponse("Couldn't fetch Kom Lists, " + asError(error).message, {
+        return new NextResponse("Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
           status: 400,
         })
       }
