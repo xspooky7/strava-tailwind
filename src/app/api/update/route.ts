@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
 import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
 import pb from "@/lib/pocketbase"
+import { asError } from "@/lib/utils"
 
 export const maxDuration = 30
 
@@ -33,13 +34,13 @@ export async function GET(req: Request) {
       )
       const now = date.getTime()
 
-      log(`[DATABASE] Fetching Strava Token `, false)
+      log(`[DATABASE] Fetching Strava Token - `, false)
       const stravaToken = await getFromDatabase("token/access", { cache: "no-store" })
       if (!stravaToken)
         return new NextResponse("Couldn't retrieve Strava Access Token", {
           status: 400,
         })
-      log("Success")
+      log(stravaToken + " - Success")
       log("[AUTH] Initializing Pocketbase")
       await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
       pb.autoCancellation(false)
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
       try {
         apiResults = await Promise.all(apiPromises)
       } catch (error) {
-        return new NextResponse("Couldn't fetch Kom Lists", {
+        return new NextResponse("Couldn't fetch Kom Lists, " + asError(error).message, {
           status: 400,
         })
       }
