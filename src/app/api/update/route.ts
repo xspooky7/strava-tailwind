@@ -1,5 +1,5 @@
 import { getFromDatabase } from "@/lib/database"
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
@@ -61,7 +61,7 @@ export async function GET(req: Request) {
       log(`[API] Fetching ${max_pages} Kom Pages `)
       for (let page = 1; page <= max_pages; page++) {
         stravaRequestCount++
-        apiPromises.push(fetchKomPage(page, stravaToken))
+        apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
       }
       try {
         apiResults = await Promise.all(apiPromises)
@@ -286,19 +286,30 @@ export async function GET(req: Request) {
 }
 
 //STRAVA API FUNCTION
-const fetchKomPage = async (page: number, token: string): Promise<number[]> => {
-  const response = await axios({
-    method: "GET",
-    url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
-    headers: { Authorization: "Bearer " + token, "Cache-Control": "no-store" },
-    timeout: 15000,
-  })
+const fetchKomPageWithRetry = async (page: number, token: string, retries = 3, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await axios({
+        method: "GET",
+        url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
+        headers: { Authorization: "Bearer " + token, "Cache-Control": "no-store" },
+      })
+      const segments = response.data ? response.data : []
+      log(`  - ${page} (${segments.length})`)
+      const idArray: number[] = segments.map((entry: any) => entry.segment.id)
 
-  const segments = response.data ? response.data : []
-  log(`  - ${page} (${segments.length})`)
-  const idArray: number[] = segments.map((entry: any) => entry.segment.id)
-
-  return idArray
+      return idArray
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.status === 503) {
+        log(`[ERROR] 503 error on attempt ${i + 1}, retrying in ${delay}ms...`)
+        await new Promise((res) => setTimeout(res, delay))
+        delay *= 2
+      } else {
+        throw error
+      }
+    }
+  }
+  throw new Error(`Failed to fetch page ${page} after ${retries} retries.`)
 }
 
 // HELPER FUNCTIONS
