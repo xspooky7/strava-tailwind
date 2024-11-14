@@ -20,7 +20,7 @@ export const loadStarredSegments = async () => {
     exceededRate = false
 
   // Fetching stored access token and cached segments
-  let stravaToken
+  let stravaToken = ""
   try {
     const [token, wasRefreshed] = await getStravaToken()
     stravaToken = token
