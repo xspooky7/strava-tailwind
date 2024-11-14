@@ -12,6 +12,7 @@ export enum Collections {
   Segments = "segments",
   Users = "users",
   KomTimeseries = "kom_timeseries",
+  UserTokens = "user_tokens",
 }
 
 // Alias types for improved usability
@@ -53,6 +54,14 @@ export type KomTimeseriesRecord = {
   user: RecordIdString
   date: string
   amount: number
+}
+
+export type UserTokenRecord = {
+  id?: string
+  user: RecordIdString
+  access_token: string
+  refresh_token: string
+  expires_at: IsoDateString
 }
 
 export type KomEffortRecord = {

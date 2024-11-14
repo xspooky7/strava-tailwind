@@ -37,7 +37,9 @@ export async function GET(req: Request) {
       log(`[DATABASE] Fetching Strava Token - `, false)
       let stravaToken
       try {
-        stravaToken = await getStravaToken()
+        const [token, wasRefreshed] = await getStravaToken()
+        log(wasRefreshed ? "REFRESHED - " : "VALID - ", false)
+        stravaToken = token
       } catch (error) {
         return new NextResponse("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
       }

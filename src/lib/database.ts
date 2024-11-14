@@ -30,7 +30,7 @@ export const setDatabase = async (path: string, payload: any): Promise<number> =
   return response.status
 }
 
-export const getStravaToken = async (overlapSeconds = 600): Promise<string> => {
+export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boolean]> => {
   const userTokenRecord: UserTokenRecord = await pb
     .collection(Collections.UserTokens)
     .getFirstListItem(`user = "${process.env.USER_ID}"`, { cache: "no-store" })
@@ -59,6 +59,6 @@ export const getStravaToken = async (overlapSeconds = 600): Promise<string> => {
       expires_at: expiryDateString,
     })
 
-    return newTokenData.data.access_token
-  } else return userTokenRecord.access_token
+    return [newTokenData.data.access_token, true]
+  } else return [userTokenRecord.access_token, false]
 }
