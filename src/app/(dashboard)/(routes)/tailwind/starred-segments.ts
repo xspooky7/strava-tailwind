@@ -21,6 +21,7 @@ export const loadStarredSegments = async () => {
 
   // Fetching stored access token and cached segments
   await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
+  pb.autoCancellation(false)
   let stravaToken = ""
   try {
     const [token, wasRefreshed] = await getStravaToken()
