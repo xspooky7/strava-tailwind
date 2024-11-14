@@ -1,5 +1,5 @@
-import { getFromDatabase } from "@/lib/database"
-import axios, { AxiosError } from "axios"
+import { getStravaToken } from "@/lib/database"
+import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
@@ -7,7 +7,7 @@ import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
 import pb from "@/lib/pocketbase"
 import { asError } from "@/lib/utils"
 
-export const maxDuration = 30
+export const maxDuration = 30 // vercel
 
 let DEBUG_LOG = ""
 export async function GET(req: Request) {
@@ -35,11 +35,12 @@ export async function GET(req: Request) {
       const now = date.getTime()
 
       log(`[DATABASE] Fetching Strava Token - `, false)
-      const stravaToken = await getFromDatabase("token/access", { cache: "no-store" })
-      if (!stravaToken)
-        return new NextResponse("Couldn't retrieve Strava Access Token", {
-          status: 400,
-        })
+      let stravaToken
+      try {
+        stravaToken = await getStravaToken()
+      } catch (error) {
+        return new NextResponse("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
+      }
       log(stravaToken + " - Success")
       log("[AUTH] Initializing Pocketbase")
       await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
         }
         apiResults = await Promise.all(apiPromises)
       } catch (error) {
-        return new NextResponse("Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
+        return new NextResponse("[ERROR] Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
           status: 503,
         })
       }
@@ -84,7 +85,7 @@ export async function GET(req: Request) {
               const effort = komEfforts.find((effort) => effort.segment_id === lostId)
               if (effort == null || effort.id == null)
                 return new NextResponse(
-                  JSON.stringify({ message: "Couldn't resolve lost effort, which was expected", id: lostId }),
+                  JSON.stringify({ message: "[ERROR] Couldn't resolve lost effort, which was expected", id: lostId }),
                   { status: 400 }
                 )
               const timeline = effort.lost_at ? effort.lost_at : []
@@ -101,7 +102,7 @@ export async function GET(req: Request) {
           } catch (err) {
             return new NextResponse(
               JSON.stringify({
-                message: "Error occured while updating an existing Kom_Effort Record (lost)",
+                message: "[ERROR] Error occured while updating an existing Kom_Effort Record (lost)",
                 ids: lostKomIds,
                 originalError: err,
               }),
@@ -136,7 +137,7 @@ export async function GET(req: Request) {
               } catch (err) {
                 return new NextResponse(
                   JSON.stringify({
-                    message: "Error occured while updating a present Kom_Effort Record (gained#1)",
+                    message: "[ERROR] Error occured while updating a present Kom_Effort Record (gained#1)",
                     ids: gainedId,
                     originalError: err,
                   }),
@@ -200,7 +201,7 @@ export async function GET(req: Request) {
               } catch (err) {
                 return new NextResponse(
                   JSON.stringify({
-                    message: "Error occured while creating a new Segment and Kom_Effort (gained#2)",
+                    message: "[ERROR] Error occured while creating a new Segment and Kom_Effort (gained#2)",
                     originalError: err,
                   }),
                   { status: 400 }
@@ -237,7 +238,7 @@ export async function GET(req: Request) {
                 } catch (err) {
                   return new NextResponse(
                     JSON.stringify({
-                      message: "Error occured while creating a new Kom_Effort Record (gained#3)",
+                      message: "[ERROR] Error occured while creating a new Kom_Effort Record (gained#3)",
                       ids: gainedId,
                       originalError: err,
                     }),
@@ -273,15 +274,9 @@ export async function GET(req: Request) {
       return new NextResponse(DEBUG_LOG, { status: 200 })
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return new NextResponse(error.message, {
-        status: 400,
-      })
-    } else {
-      return new NextResponse("Unknown Error in Route", {
-        status: 400,
-      })
-    }
+    return new NextResponse("[ERROR] Unknown Error in Route " + JSON.stringify(asError(error)), {
+      status: 400,
+    })
   }
 }
 
@@ -309,7 +304,7 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
       }
     }
   }
-  throw new Error(`Failed to fetch page ${page} after ${retries} retries.`)
+  throw new Error(`[ERROR] 503 error on fetching page ${page} after ${retries} retries.`)
 }
 
 // HELPER FUNCTIONS
