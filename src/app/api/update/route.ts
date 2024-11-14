@@ -33,6 +33,9 @@ export async function GET(req: Request) {
         } CEST`
       )
       const now = date.getTime()
+      log("[AUTH] Initializing Pocketbase")
+      await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
+      pb.autoCancellation(false)
 
       log(`[DATABASE] Fetching Strava Token - `, false)
       let stravaToken
@@ -44,10 +47,6 @@ export async function GET(req: Request) {
         return new NextResponse("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
       }
       log(stravaToken + " - Success")
-      log("[AUTH] Initializing Pocketbase")
-      await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
-      pb.autoCancellation(false)
-
       log("[DATABASE] Fetching Kom_Effort Collection")
       const komEfforts: KomEffortRecord[] = await pb
         .collection(Collections.KomEfforts)
