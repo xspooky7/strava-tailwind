@@ -4,18 +4,16 @@ import React from "react"
 import { DataTableSkeleton } from "../koms/kom-table-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
 
-export default async function Home() {
-  let promises
+export default async function TailwindPage() {
   let statusMessage = ""
   const startTime = performance.now()
   //const update = await setDatabase('tailwind/segments', [])
   //statusMessage = update + ''
-  try {
-    promises = loadStarredSegments()
-  } catch (error: any) {
+
+  const promises = loadStarredSegments().catch((error) => {
     console.log(error)
     statusMessage = error.message
-  }
+  })
 
   return (
     <div className="container mx-auto py-5 px-4">
@@ -30,7 +28,7 @@ export default async function Home() {
           />
         }
       >
-        <DataTable columns={columns} promises={promises!} loadStart={startTime} />
+        <DataTable columns={columns} promises={promises} loadStart={startTime} />
       </React.Suspense>
     </div>
   )

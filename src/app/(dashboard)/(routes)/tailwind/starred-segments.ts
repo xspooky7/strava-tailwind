@@ -149,7 +149,7 @@ export const loadStarredSegments = async () => {
     exceededRate,
   }
 }
-const fetchStarredPage = (page: number, stravaToken: string) => {
+const fetchStarredPage = async (page: number, stravaToken: string) => {
   return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {
     method: "GET",
     headers: {
