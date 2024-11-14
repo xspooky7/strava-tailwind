@@ -59,15 +59,15 @@ export async function GET(req: Request) {
       const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
       log(`[API] Fetching ${max_pages} Kom Pages `)
-      for (let page = 1; page <= max_pages; page++) {
-        stravaRequestCount++
-        apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
-      }
       try {
+        for (let page = 1; page <= max_pages; page++) {
+          stravaRequestCount++
+          apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
+        }
         apiResults = await Promise.all(apiPromises)
       } catch (error) {
         return new NextResponse("Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
-          status: 400,
+          status: 503,
         })
       }
       log("[API]Success")
@@ -286,13 +286,13 @@ export async function GET(req: Request) {
 }
 
 //STRAVA API FUNCTION
-const fetchKomPageWithRetry = async (page: number, token: string, retries = 3, delay = 1000) => {
+const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, delay = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await axios({
         method: "GET",
         url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
-        headers: { Authorization: "Bearer " + token, "Cache-Control": "no-store" },
+        headers: { Authorization: "Bearer " + token },
       })
       const segments = response.data ? response.data : []
       log(`  - ${page} (${segments.length})`)
@@ -301,7 +301,7 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 3, d
       return idArray
     } catch (error) {
       if (axios.isAxiosError(error) && error.status === 503) {
-        log(`[ERROR] 503 error on attempt ${i + 1}, retrying in ${delay}ms...`)
+        log(`[ERROR] 503 error on attempt ${i + 1} fetching page ${page}, retrying in ${delay}ms...`)
         await new Promise((res) => setTimeout(res, delay))
         delay *= 2
       } else {
