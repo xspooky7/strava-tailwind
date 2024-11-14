@@ -3,6 +3,7 @@ import { Collections, KomEffortRecord, SegmentRecord } from "../../../../../pock
 import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
 import { WeatherSegment } from "../../../../../types"
 import pb from "@/lib/pocketbase"
+import { asError } from "@/lib/utils"
 
 /**
  * Gathers a detailed version of all currently starred segments using a database as cache to relieve API rates.
@@ -19,7 +20,13 @@ export const loadStarredSegments = async () => {
     exceededRate = false
 
   // Fetching stored access token and cached segments
-  const stravaToken = await getStravaToken()
+  let stravaToken
+  try {
+    const [token, wasRefreshed] = await getStravaToken()
+    stravaToken = token
+  } catch (error) {
+    throw new Error("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
+  }
   await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
 
   const databaseListRequest: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
