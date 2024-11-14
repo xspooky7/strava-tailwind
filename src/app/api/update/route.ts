@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     const currentHour = (date.getUTCHours() + 1) % 24 //CEST
     const currentMinute = date.getUTCMinutes()
 
-    if (currentHour < 7) {
+    if (currentHour < 7 || headersList.get("night-override")) {
       return new NextResponse("Night", { status: 201 })
     } else {
       log(
