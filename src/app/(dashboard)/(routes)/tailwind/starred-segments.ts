@@ -20,6 +20,7 @@ export const loadStarredSegments = async () => {
     exceededRate = false
 
   // Fetching stored access token and cached segments
+  await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
   let stravaToken = ""
   try {
     const [token, wasRefreshed] = await getStravaToken()
@@ -27,7 +28,6 @@ export const loadStarredSegments = async () => {
   } catch (error) {
     throw new Error("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
   }
-  await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
 
   const databaseListRequest: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
     .collection(Collections.KomEfforts)
