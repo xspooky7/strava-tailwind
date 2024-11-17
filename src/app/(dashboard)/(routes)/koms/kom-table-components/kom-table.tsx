@@ -53,6 +53,12 @@ export function KomTable({ columns, promises }: DataTableProps) {
   const table = useReactTable({
     data: filteredData,
     columns,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 30,
+      },
+    },
     state: {
       sorting,
       columnVisibility,
