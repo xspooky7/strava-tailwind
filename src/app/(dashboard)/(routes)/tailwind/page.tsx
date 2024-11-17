@@ -14,8 +14,7 @@ export default async function TailwindPage() {
     console.log(error)
     statusMessage = error.message
   })
-
-  return (
+  const temp = (
     <div className="container mx-auto py-5 px-4">
       <React.Suspense
         fallback={
@@ -32,4 +31,5 @@ export default async function TailwindPage() {
       </React.Suspense>
     </div>
   )
+  return <p>Under Maintenance</p>
 }
