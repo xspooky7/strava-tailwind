@@ -60,34 +60,16 @@ export const columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRe
         status === "Gained" ? (
           <>
             <PlusIcon className="mr-2 h-4 w-4 text-green-400" />
-            <span className="text-green-400">Gained</span>
+            <span className="text-green-400">{new Date(row.original.gained_at![0]).toDateString()}</span>
           </>
         ) : (
           <>
             <MinusIcon className="mr-2 h-4 w-4 text-red-400" />
-            <span className="text-red-400">Lost</span>
+            <span className="text-red-400">{new Date(row.original.lost_at![0]).toDateString()}</span>
           </>
         )
 
-      return <div className="flex w-3 items-center">{bubble}</div>
-    },
-  },
-  {
-    accessorKey: "priority",
-    header: ({ column }) => <TableColumnHeader column={column} title="Priority" />,
-    cell: ({ row }) => {
-      const priority = priorities.find((priority) => priority.value === row.getValue("priority"))
-
-      if (!priority) {
-        return null
-      }
-
-      return (
-        <div className="flex items-center">
-          {priority.icon && <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
-          <span>{priority.label}</span>
-        </div>
-      )
+      return <div className="flex items-center">{bubble}</div>
     },
   },
   {

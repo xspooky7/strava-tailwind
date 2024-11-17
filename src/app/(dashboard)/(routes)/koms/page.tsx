@@ -5,15 +5,21 @@ import { KomTable } from "./kom-table-components/kom-table"
 import { columns } from "./kom-table-components/columns"
 import { Collections, KomEffortRecord, SegmentRecord } from "../../../../../pocketbase-types"
 import pb from "@/lib/pocketbase"
+import { cookies } from "next/headers"
 
 const KomPage = async () => {
+  const cookie = cookies().get("pb_auth")
+  if (!cookie) throw new Error("Not logged in")
+
+  const { model } = JSON.parse(cookie.value)
+
   await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
   const promises: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
     .collection(Collections.KomEfforts)
     .getFullList({
       filter: "has_kom=true && (gained_at != null || lost_at != null)",
       expand: "segment",
-      next: { revalidate: 120 },
+      next: { revalidate: 10 },
     })
 
   return (
