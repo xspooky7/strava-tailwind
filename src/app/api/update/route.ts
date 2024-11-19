@@ -66,8 +66,8 @@ export async function GET(req: Request) {
 
       try {
         apiIds = await fetchKomPageWithRetry(1, stravaToken)
-      } catch {
-        return new NextResponse("[ERROR] Couldn't fetch first Kom Page", {
+      } catch (error) {
+        return new NextResponse("[ERROR] Couldn't fetch first Kom Page " + JSON.stringify(asError(error)), {
           status: 503,
         })
       }
