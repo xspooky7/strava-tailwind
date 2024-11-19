@@ -37,15 +37,7 @@ export function KomTable({ columns, promises }: DataTableProps) {
   const filteredData = React.useMemo(
     () =>
       data.filter((dat) => {
-        if (dat.gained_at && dat.lost_at) {
-          return Math.max(dat.gained_at[dat.gained_at.length - 1], dat.lost_at[dat.lost_at.length - 1]) > time
-        }
-        if (dat.gained_at) {
-          return dat.gained_at[dat.gained_at.length - 1] > time
-        }
-        if (dat.lost_at) {
-          return dat.lost_at[dat.lost_at.length - 1] > time
-        }
+        return dat.gained_at || dat.lost_at
       }),
     []
   )
