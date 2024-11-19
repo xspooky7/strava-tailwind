@@ -57,24 +57,38 @@ export async function GET(req: Request) {
       log(`[INFO] Kom_Effort count: ${komEfforts.length}, active Koms: ${ownedKomIds.length}`)
       const apiPromises = []
       let apiResults = []
+      let apiIds: number[] = []
 
       const p = komEfforts.length / 200
       const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
-      log(`[API] Fetching ${max_pages} Kom Pages `)
+      log(`[API] Fetching First Kom Page`)
+
       try {
-        for (let page = 1; page <= max_pages; page++) {
-          stravaRequestCount++
-          apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
-        }
-        apiResults = await Promise.all(apiPromises)
-      } catch (error) {
-        return new NextResponse("[ERROR] Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
+        apiIds = await fetchKomPageWithRetry(1, stravaToken)
+      } catch {
+        return new NextResponse("[ERROR] Couldn't fetch first Kom Page", {
           status: 503,
         })
       }
+
+      if (max_pages > 1) {
+        log(`[API] Fetching ${max_pages - 1} more Kom Pages `)
+        try {
+          for (let page = 2; page <= max_pages; page++) {
+            stravaRequestCount++
+            apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
+          }
+          apiResults = await Promise.all(apiPromises)
+        } catch (error) {
+          return new NextResponse("[ERROR] Couldn't fetch Kom Lists, " + JSON.stringify(asError(error)), {
+            status: 503,
+          })
+        }
+        apiIds = apiIds.concat(apiResults.reduce((acc, curr) => acc.concat(curr), []))
+      }
+
       log("[API]Success")
-      const apiIds: number[] = apiResults.reduce((acc, curr) => acc.concat(curr), [])
 
       if (!checkIdsEqual(ownedKomIds, apiIds)) {
         const [lostKomIds, gainedKomIds] = arrDifference(ownedKomIds, apiIds)
