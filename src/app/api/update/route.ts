@@ -7,7 +7,7 @@ import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
 import pb from "@/lib/pocketbase"
 import { asError } from "@/lib/utils"
 
-export const maxDuration = 30 // vercel
+export const maxDuration = 60 // vercel
 
 let DEBUG_LOG = ""
 export async function GET(req: Request) {
@@ -48,6 +48,7 @@ export async function GET(req: Request) {
       }
       log(stravaToken + " - Success")
       log("[DATABASE] Fetching Kom_Effort Collection")
+
       const komEfforts: KomEffortRecord[] = await pb
         .collection(Collections.KomEfforts)
         .getFullList({ cache: "no-store" })
@@ -117,38 +118,49 @@ export async function GET(req: Request) {
          * Gained a Kom which is already a past Kom-Effort. Both records are already present.
          */
         if (gainedKomIds.length) {
-          const restIds = []
-          for (const gainedId of gainedKomIds) {
+          const restIds: number[] = []
+          const case1Promises: Promise<any>[] = []
+          gainedKomIds.forEach((gainedId) => {
             const storedEffort = komEfforts.find((effort) => effort.segment_id === gainedId)
             if (storedEffort) {
-              log(`[INFO] Processing ${gainedId} (gained#1)`)
               const timeline = storedEffort.gained_at ? storedEffort.gained_at : []
-              try {
-                log(
-                  `[DATABASE] Updating Kom_Effort Record status to true (segment_id:${storedEffort.segment_id}, segment_ref:${storedEffort.id})`
-                )
-                await pb.collection(Collections.KomEfforts).update(
-                  storedEffort.id!,
-                  {
-                    gained_at: timeline.concat(now),
-                    has_kom: true,
-                  },
-                  { cache: "no-store" }
-                )
-              } catch (err) {
-                return new NextResponse(
-                  JSON.stringify({
-                    message: "[ERROR] Error occured while updating a present Kom_Effort Record (gained#1)",
-                    ids: gainedId,
-                    originalError: err,
-                  }),
-                  { status: 400 }
-                )
-              }
+              case1Promises.push(
+                pb
+                  .collection(Collections.KomEfforts)
+                  .update(
+                    storedEffort.id!,
+                    {
+                      gained_at: timeline.concat(now),
+                      has_kom: true,
+                    },
+                    { cache: "no-store" }
+                  )
+                  .then(() =>
+                    log(
+                      `[DATABASE] Updating Kom_Effort Record status to true (segment_id:${storedEffort.segment_id}, segment_ref:${storedEffort.id})`
+                    )
+                  )
+                  .catch((err) => {
+                    return new NextResponse(
+                      JSON.stringify({
+                        message: `[ERROR] Error occured while updating a present Kom_Effort Record 
+                        (segment_id:${storedEffort.segment_id}, segment_ref:${storedEffort.id}, gained#1)`,
+                        ids: gainedId,
+                        originalError: err,
+                      }),
+                      { status: 400 }
+                    )
+                  })
+              )
             } else {
               restIds.push(gainedId)
             }
+          })
+          if (case1Promises.length) {
+            log(`[INFO] Processing ${case1Promises.length} PATCH transactions (gained#1)`)
+            await Promise.all(case1Promises)
           }
+
           if (restIds.length) {
             let segments: SegmentRecord[] = await pb.collection(Collections.Segments).getFullList({ cache: "no-store" })
             const segIds = new Set(segments.map((segment: SegmentRecord) => segment.segment_id))
