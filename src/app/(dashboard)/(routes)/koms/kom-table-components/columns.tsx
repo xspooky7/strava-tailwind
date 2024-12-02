@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { TableColumnHeader } from "./table-column-header"
 import { TableRowActions } from "./table-row-action"
 import { CircleMinusIcon, CirclePlusIcon, MinusIcon, PlusIcon, StarIcon } from "lucide-react"
-import { KomEffortRecord, SegmentRecord } from "../../../../../../pocketbase-types"
 import { KomSegment, Label } from "../../../../../../types"
 
 export const columns: ColumnDef<KomSegment>[] = [
@@ -22,6 +21,9 @@ export const columns: ColumnDef<KomSegment>[] = [
   },
   {
     accessorKey: "name",
+    filterFn: (row, _cloumnId: string, filterValue: string) =>
+      row.original.expand.segment.name.toLowerCase().includes(filterValue.toLowerCase()),
+
     header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
       const labels = row.original.expand.segment.labels

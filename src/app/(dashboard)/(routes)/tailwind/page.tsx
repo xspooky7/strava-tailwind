@@ -7,8 +7,6 @@ import { loadStarredSegments } from "./starred-segments"
 export default async function TailwindPage() {
   let statusMessage = ""
   const startTime = performance.now()
-  //const update = await setDatabase('tailwind/segments', [])
-  //statusMessage = update + ''
 
   const promises = loadStarredSegments().catch((error) => {
     console.log(error)
