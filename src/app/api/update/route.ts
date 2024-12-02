@@ -294,7 +294,7 @@ export async function GET(req: Request) {
           log(`[WARNING] Failed to update timeseries`)
         }
       } else {
-        log("[INFO] Arrays are equal")
+        log(`[INFO] Arrays are equal (Db: ${ownedKomIds.length} - Api: ${apiIds.length})`)
       }
       log(`[INFO] Requests made to Strava - ${STRAVA_REQUEST_COUNT}, Rate exceeded - ${exceededRate}`)
       log("[EXIT] 200")
