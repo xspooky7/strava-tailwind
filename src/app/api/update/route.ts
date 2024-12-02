@@ -10,16 +10,17 @@ import { asError } from "@/lib/utils"
 export const maxDuration = 60 // vercel
 
 let DEBUG_LOG = ""
+let STRAVA_REQUEST_COUNT = 0
 export async function GET(req: Request) {
   DEBUG_LOG = ""
+  STRAVA_REQUEST_COUNT = 0
   try {
     const headersList = await headers()
     const apiKey = headersList.get("x-api-key")
     if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
     const userId = process.env.USER_ID!
 
-    let exceededRate = false,
-      stravaRequestCount = 0
+    let exceededRate = false
     const date = new Date()
     const currentHour = (date.getUTCHours() + 1) % 24 //CEST
     const currentMinute = date.getUTCMinutes()
@@ -63,10 +64,8 @@ export async function GET(req: Request) {
       const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
       log(`[API] Fetching First Kom Page`)
-
       try {
         apiIds = await fetchKomPageWithRetry(1, stravaToken, 3, 1500)
-        stravaRequestCount++
       } catch (error) {
         return new NextResponse("[ERROR] Couldn't fetch first Kom Page " + JSON.stringify(asError(error)), {
           status: 503,
@@ -77,7 +76,6 @@ export async function GET(req: Request) {
         log(`[API] Fetching ${max_pages - 1} more Kom Pages `)
         try {
           for (let page = 2; page <= max_pages; page++) {
-            stravaRequestCount++
             apiPromises.push(fetchKomPageWithRetry(page, stravaToken))
           }
           apiResults = await Promise.all(apiPromises)
@@ -89,7 +87,7 @@ export async function GET(req: Request) {
         apiIds = apiIds.concat(apiResults.reduce((acc, curr) => acc.concat(curr), []))
       }
 
-      log("[API]Success")
+      log("[API] Success")
 
       if (!checkIdsEqual(ownedKomIds, apiIds)) {
         const [lostKomIds, gainedKomIds] = arrDifference(ownedKomIds, apiIds)
@@ -199,7 +197,7 @@ export async function GET(req: Request) {
                   const isFullfilled = val.status === "fulfilled"
                   if (!isFullfilled) {
                     exceededRate = true
-                  } else stravaRequestCount++
+                  } else STRAVA_REQUEST_COUNT++
                   return isFullfilled
                 })
                 .map((res) => res.value)
@@ -286,17 +284,19 @@ export async function GET(req: Request) {
             date: dateString,
             amount,
           }
-          const seriesUpdate = pb.collection(Collections.KomTimeseries).create(newTimeseries, { cache: "no-store" })
-          log(`[DATABASE] Updated Timeseries: ${amount} - ${dateString}`)
+          await pb
+            .collection(Collections.KomTimeseries)
+            .create(newTimeseries, { cache: "no-store" })
+            .then((timeSeries) => {
+              log(`[DATABASE] Updated Timeseries: ${timeSeries.amount} - ${timeSeries.date}`)
+            })
         } catch (err) {
           log(`[WARNING] Failed to update timeseries`)
         }
-
-        // TODO Kom amount update
       } else {
         log("[INFO] Arrays are equal")
       }
-      log(`[INFO] Requests made to Strava - ${stravaRequestCount}, Rate exceeded - ${exceededRate}`)
+      log(`[INFO] Requests made to Strava - ${STRAVA_REQUEST_COUNT}, Rate exceeded - ${exceededRate}`)
       log("[EXIT] 200")
 
       return new NextResponse(DEBUG_LOG, { status: 200 })
@@ -317,9 +317,9 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
         url: `${process.env.STRAVA_KOM_URL}?page=${page}&per_page=200`,
         headers: { Authorization: "Bearer " + token },
       })
-      const segments = response.data ? response.data : []
-      log(`  - ${page} (${segments.length})`)
-      const idArray: number[] = segments.map((entry: any) => entry.segment.id)
+      STRAVA_REQUEST_COUNT++
+      log(`  - ${page} (${response.data.length})`)
+      const idArray: number[] = response.data.map((entry: any) => entry.segment.id)
 
       return idArray
     } catch (error) {
