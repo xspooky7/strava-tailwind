@@ -38,8 +38,8 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             </Breadcrumb>
           </div>
           <div className="flex space-x-2">
-            <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-semibold">
-              <CrownIcon />
+            <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
+              <CrownIcon height={17} width={17} />
               <Suspense fallback={<span>0</span>}>
                 <TotalKomCount timeSeriesPromise={timeseriesRecordPromise} />
               </Suspense>

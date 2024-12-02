@@ -22,10 +22,16 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("status") && (
-          <TableFacetedFilter column={table.getColumn("status")} title="Status" options={[]} />
+        {table.getColumn("label") && (
+          <TableFacetedFilter
+            column={table.getColumn("label")}
+            title="Label"
+            options={[
+              { label: "Circuit", value: "Circuit" },
+              { label: "Contested", value: "Contested" },
+            ]}
+          />
         )}
-        {table.getColumn("city") && <TableFacetedFilter column={table.getColumn("city")} title="City" options={[]} />}
         {isFiltered && (
           <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
             Reset

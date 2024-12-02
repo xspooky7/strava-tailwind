@@ -22,8 +22,8 @@ export const columns: ColumnDef<KomSegment>[] = [
   {
     accessorKey: "name",
     filterFn: (row, _cloumnId: string, filterValue: string) =>
-      row.original.expand.segment.name.toLowerCase().includes(filterValue.toLowerCase()),
-
+      row.original.expand.segment.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      row.original.expand.segment.city.toLowerCase().includes(filterValue.toLowerCase()),
     header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
       const labels = row.original.expand.segment.labels
@@ -44,6 +44,18 @@ export const columns: ColumnDef<KomSegment>[] = [
       )
     },
   },
+  {
+    id: "label",
+    accessorKey: "label",
+    filterFn: (row, id, value) => {
+      if (row.original.expand.segment.labels)
+        return value.every((element: Label) => row.original.expand.segment.labels!.includes(element))
+      return false
+    },
+    header: ({ column }) => null,
+    cell: ({ row }) => null,
+  },
+
   {
     accessorKey: "city",
     header: ({ column }) => <TableColumnHeader column={column} title="City" />,
