@@ -63,12 +63,16 @@ export const columns: ColumnDef<KomSegment>[] = [
         status === "Gained" ? (
           <div className="flex py-1 px-2 items-center rounded-xl">
             <CirclePlusIcon className="mr-2 h-4 w-4 text-[#28A745]" />
-            <span className="text-[#28A745]">{new Date(row.original.gained_at![0]).toDateString().slice(4)}</span>
+            <span className="text-[#28A745]">
+              {new Date(row.original.gained_at![row.original.gained_at!.length - 1]).toDateString().slice(4)}
+            </span>
           </div>
         ) : (
           <div className="flex py-1 px-2 items-center rounded-xl ">
             <CircleMinusIcon className="mr-2 h-4 w-4 text-destructive" />
-            <span className="text-destructive">{new Date(row.original.lost_at![0]).toDateString().slice(4)}</span>
+            <span className="text-destructive">
+              {new Date(row.original.lost_at![row.original.lost_at!.length - 1]).toDateString().slice(4)}
+            </span>
           </div>
         )
 
