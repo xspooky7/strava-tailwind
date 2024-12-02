@@ -25,9 +25,7 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
         {table.getColumn("status") && (
           <TableFacetedFilter column={table.getColumn("status")} title="Status" options={[]} />
         )}
-        {table.getColumn("priority") && (
-          <TableFacetedFilter column={table.getColumn("priority")} title="Priority" options={[]} />
-        )}
+        {table.getColumn("city") && <TableFacetedFilter column={table.getColumn("city")} title="City" options={[]} />}
         {isFiltered && (
           <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
             Reset

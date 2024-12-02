@@ -57,7 +57,6 @@ export function TableRowActions<TData>({ row }: DataTableRowActionsProps<TData>)
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuSeparator />
       </DropdownMenuContent>
     </DropdownMenu>
   )

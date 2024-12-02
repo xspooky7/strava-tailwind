@@ -5,7 +5,8 @@ import { BikeIcon, CrownIcon, LayoutDashboardIcon, Settings2, WindIcon } from "l
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "../ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarRail } from "../ui/sidebar"
+import { Icons } from "@/components/icons"
 
 // This is sample data.
 const data = {
@@ -68,7 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <BikeIcon />
+        <Icons.logo color="#FFF" />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

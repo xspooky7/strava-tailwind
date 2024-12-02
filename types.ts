@@ -1,4 +1,4 @@
-import { SegmentRecord } from "./pocketbase-types"
+import { KomEffortRecord, SegmentRecord } from "./pocketbase-types"
 
 export interface Line {
   start: Coordinate
@@ -40,6 +40,12 @@ export interface WeatherSegment extends SegmentRecord {
     avgTailwindSpeed: number
   }
   isOwnedKom?: boolean
+}
+
+export interface KomSegment extends KomEffortRecord {
+  expand: {
+    segment: SegmentRecord
+  }
 }
 
 /*

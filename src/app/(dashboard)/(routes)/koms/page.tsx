@@ -6,6 +6,7 @@ import { columns } from "./kom-table-components/columns"
 import { Collections, KomEffortRecord, SegmentRecord } from "../../../../../pocketbase-types"
 import pb from "@/lib/pocketbase"
 import { cookies } from "next/headers"
+import { KomSegment } from "../../../../../types"
 
 const KomPage = async () => {
   const cookie = cookies().get("pb_auth")
@@ -14,14 +15,12 @@ const KomPage = async () => {
   const { model } = JSON.parse(cookie.value)
 
   await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
-  const promises: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
-    .collection(Collections.KomEfforts)
-    .getFullList({
-      filter: "has_kom=true && (gained_at != null || lost_at != null)",
-      expand: "segment",
-      sort: "-updated",
-      next: { revalidate: 120 },
-    })
+  const data: KomSegment[] = await pb.collection(Collections.KomEfforts).getFullList({
+    filter: "(gained_at != null || lost_at != null)",
+    expand: "segment",
+    sort: "-updated",
+    next: { revalidate: 120 },
+  })
 
   return (
     <div className="container mx-auto py-5 px-4">
@@ -36,7 +35,7 @@ const KomPage = async () => {
           />
         }
       >
-        <KomTable promises={promises} columns={columns} />
+        <KomTable data={data} columns={columns} />
       </React.Suspense>
     </div>
   )

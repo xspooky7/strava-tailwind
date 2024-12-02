@@ -18,32 +18,20 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "./table-pagination"
 import { TableToolbar } from "./table-toolbar"
-import { KomEffortRecord, SegmentRecord } from "../../../../../../pocketbase-types"
+import { KomSegment } from "../../../../../../types"
 
 interface DataTableProps {
-  columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRecord } }>[]
-  promises: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]>
+  columns: ColumnDef<KomSegment>[]
+  data: KomSegment[]
 }
 
-export function KomTable({ columns, promises }: DataTableProps) {
+export function KomTable({ columns, data }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const data = React.use(promises)
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const time = sevenDaysAgo.getTime()
-  const filteredData = React.useMemo(
-    () =>
-      data.filter((dat) => {
-        return dat.gained_at || dat.lost_at
-      }),
-    []
-  )
-
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns,
     initialState: {
       pagination: {

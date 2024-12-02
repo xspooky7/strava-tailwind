@@ -3,13 +3,12 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { TableColumnHeader } from "./table-column-header"
-import { priorities } from "./metadata"
 import { TableRowActions } from "./table-row-action"
-import { MinusIcon, PlusIcon, StarIcon } from "lucide-react"
+import { CircleMinusIcon, CirclePlusIcon, MinusIcon, PlusIcon, StarIcon } from "lucide-react"
 import { KomEffortRecord, SegmentRecord } from "../../../../../../pocketbase-types"
-import { Label } from "../../../../../../types"
+import { KomSegment, Label } from "../../../../../../types"
 
-export const columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRecord } }>[] = [
+export const columns: ColumnDef<KomSegment>[] = [
   {
     id: "star",
     header: "",
@@ -30,7 +29,11 @@ export const columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRe
         <div className="flex space-x-2">
           {labels &&
             labels.slice(0, 2).map((c: Label) => (
-              <Badge key={c} variant="outline">
+              <Badge
+                key={c}
+                variant="outline"
+                className="text-primary dark:text-secondary border-primary dark:border-secondary"
+              >
                 {c}
               </Badge>
             ))}
@@ -58,15 +61,15 @@ export const columns: ColumnDef<KomEffortRecord & { expand: { segment: SegmentRe
 
       const bubble =
         status === "Gained" ? (
-          <>
-            <PlusIcon className="mr-2 h-4 w-4 text-green-400" />
-            <span className="text-green-400">{new Date(row.original.gained_at![0]).toDateString()}</span>
-          </>
+          <div className="flex py-1 px-2 items-center rounded-xl">
+            <CirclePlusIcon className="mr-2 h-4 w-4 text-[#28A745]" />
+            <span className="text-[#28A745]">{new Date(row.original.gained_at![0]).toDateString().slice(4)}</span>
+          </div>
         ) : (
-          <>
-            <MinusIcon className="mr-2 h-4 w-4 text-red-400" />
-            <span className="text-red-400">{new Date(row.original.lost_at![0]).toDateString()}</span>
-          </>
+          <div className="flex py-1 px-2 items-center rounded-xl ">
+            <CircleMinusIcon className="mr-2 h-4 w-4 text-destructive" />
+            <span className="text-destructive">{new Date(row.original.lost_at![0]).toDateString().slice(4)}</span>
+          </div>
         )
 
       return <div className="flex items-center">{bubble}</div>
