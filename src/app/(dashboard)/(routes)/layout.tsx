@@ -2,17 +2,20 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SIDEBAR_COOKIE_NAME, SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TotalKomCount } from "@/components/total-kom-count"
 import { CrownIcon } from "lucide-react"
 import { Suspense } from "react"
 import { getKomCount } from "@/lib/get-kom-count"
 import { Breadcrumbs } from "../breadcrumbs"
+import { cookies } from "next/headers"
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const timeseriesRecordPromise = getKomCount()
+  const sidebarOpen = cookies().get("sidebar:state")?.value ?? "true"
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen === "true"}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex px-4 h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

@@ -35,7 +35,7 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           return state === "collapsed" ? (
-            <SidebarMenuItem>
+            <SidebarMenuItem key={item.title}>
               <SidebarMenuButton tooltip={item.title}>
                 <a href={item.url}>{item.icon && <item.icon size={16} />}</a>
               </SidebarMenuButton>
@@ -66,7 +66,7 @@ export function NavMain({
               </SidebarMenuItem>
             </Collapsible>
           ) : (
-            <SidebarMenuButton tooltip={item.title}>
+            <SidebarMenuButton tooltip={item.title} key={item.title}>
               <a className="flex gap-2 items-center" href={item.url}>
                 {item.icon && <item.icon size={16} />}
 
