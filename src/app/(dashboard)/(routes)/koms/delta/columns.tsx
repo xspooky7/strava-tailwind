@@ -2,31 +2,37 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
-import { TableColumnHeader } from "./table-column-header"
-import { TableRowActions } from "./table-row-action"
-import { CircleMinusIcon, CirclePlusIcon, MinusIcon, PlusIcon, StarIcon } from "lucide-react"
-import { KomSegment, Label } from "../../../../../../types"
+import { TableColumnHeader } from "../kom-components/table-column-header"
+import { TableRowActions } from "../kom-components/table-row-action"
+import { CircleMinusIcon, CirclePlusIcon, StarIcon } from "lucide-react"
+import { TableSegment, Label } from "../../../../../../types"
 
-export const columns: ColumnDef<KomSegment>[] = [
+export const columns: ColumnDef<TableSegment>[] = [
   {
     id: "star",
-    header: "",
-    cell: ({ row }) => (
-      <div className="flex justify-center w-10">
-        <StarIcon className="h-5 w-5 translate-y-[2px] text-muted hover:text-amber-400 hover:fill-amber-400 cursor-pointer" />
-      </div>
-    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex justify-center">
+          <StarIcon
+            className={
+              "h-5 w-5 translate-y-[2px] hover:text-amber-400 hover:fill-amber-400 cursor-pointer" +
+              (row.original.is_starred ? " text-amber-400 fill-amber-400" : " text-muted")
+            }
+          />
+        </div>
+      )
+    },
     enableSorting: false,
     enableHiding: false,
   },
   {
     accessorKey: "name",
     filterFn: (row, _cloumnId: string, filterValue: string) =>
-      row.original.expand.segment.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      row.original.expand.segment.city.toLowerCase().includes(filterValue.toLowerCase()),
+      row.original.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      row.original.city.toLowerCase().includes(filterValue.toLowerCase()),
     header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
-      const labels = row.original.expand.segment.labels
+      const labels = row.original.labels
       return (
         <div className="flex space-x-2">
           {labels &&
@@ -39,7 +45,7 @@ export const columns: ColumnDef<KomSegment>[] = [
                 {c}
               </Badge>
             ))}
-          <span className="max-w-[500px] truncate font-medium">{row.original.expand.segment.name}</span>
+          <span className="max-w-[500px] truncate font-medium">{row.original.name}</span>
         </div>
       )
     },
@@ -48,8 +54,7 @@ export const columns: ColumnDef<KomSegment>[] = [
     id: "label",
     accessorKey: "label",
     filterFn: (row, id, value) => {
-      if (row.original.expand.segment.labels)
-        return value.every((element: Label) => row.original.expand.segment.labels!.includes(element))
+      if (row.original.labels) return value.every((element: Label) => row.original.labels!.includes(element))
       return false
     },
     header: ({ column }) => null,
@@ -60,7 +65,7 @@ export const columns: ColumnDef<KomSegment>[] = [
     accessorKey: "city",
     header: ({ column }) => <TableColumnHeader column={column} title="City" />,
     cell: ({ row }) => {
-      return <span>{row.original.expand.segment.city}</span>
+      return <span>{row.original.city}</span>
     },
   },
 
@@ -75,14 +80,14 @@ export const columns: ColumnDef<KomSegment>[] = [
 
       const bubble =
         status === "Gained" ? (
-          <div className="flex py-1 px-2 items-center rounded-xl">
+          <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
             <CirclePlusIcon className="mr-2 h-4 w-4 text-[#28A745]" />
             <span className="text-[#28A745]">
               {new Date(row.original.gained_at![row.original.gained_at!.length - 1]).toDateString().slice(4)}
             </span>
           </div>
         ) : (
-          <div className="flex py-1 px-2 items-center rounded-xl ">
+          <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
             <CircleMinusIcon className="mr-2 h-4 w-4 text-destructive" />
             <span className="text-destructive">
               {new Date(row.original.lost_at![row.original.lost_at!.length - 1]).toDateString().slice(4)}

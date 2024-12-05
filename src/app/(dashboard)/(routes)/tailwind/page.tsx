@@ -1,7 +1,7 @@
 import { DataTable } from "./data-table"
 import { columns } from "./columns"
 import React from "react"
-import { DataTableSkeleton } from "../koms/kom-table-components/table-skeleton"
+import { DataTableSkeleton } from "../koms/kom-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
 
 export default async function TailwindPage() {

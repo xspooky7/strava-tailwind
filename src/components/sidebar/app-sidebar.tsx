@@ -5,7 +5,7 @@ import { BikeIcon, CrownIcon, LayoutDashboardIcon, Settings2, WindIcon } from "l
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarRail } from "../ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "../ui/sidebar"
 import { Icons } from "@/components/icons"
 
 // This is sample data.
@@ -20,20 +20,24 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboardIcon,
-      isActive: true,
     },
     {
       title: "Koms",
       url: "/koms",
       icon: CrownIcon,
+
       items: [
         {
-          title: "All",
+          title: "Overview",
           url: "/koms",
         },
         {
+          title: "Total",
+          url: "/koms/total",
+        },
+        {
           title: "Delta",
-          url: "/koms",
+          url: "/koms/delta",
         },
       ],
     },
@@ -41,7 +45,6 @@ const data = {
       title: "Tailwind",
       url: "/tailwind",
       icon: WindIcon,
-      items: [],
     },
     {
       title: "Settings",
@@ -67,7 +70,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar className="bg-card" collapsible="icon" {...props}>
       <SidebarHeader>
         <Icons.logo color="#FFF" />
       </SidebarHeader>

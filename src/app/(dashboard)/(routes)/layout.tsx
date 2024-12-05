@@ -1,22 +1,16 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TotalKomCount } from "@/components/total-kom-count"
 import { CrownIcon } from "lucide-react"
 import { Suspense } from "react"
 import { getKomCount } from "@/lib/get-kom-count"
+import { Breadcrumbs } from "../breadcrumbs"
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  const timeseriesRecordPromise = getKomCount("")
+  const timeseriesRecordPromise = getKomCount()
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -28,12 +22,9 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">App Name</BreadcrumbLink>
+                  <BreadcrumbLink href="#">Strava Tools</BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
+                <Breadcrumbs />
               </BreadcrumbList>
             </Breadcrumb>
           </div>

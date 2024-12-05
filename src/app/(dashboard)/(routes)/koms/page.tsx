@@ -1,44 +1,14 @@
-import * as React from "react"
+import { Button } from "@/components/ui/button"
 
-import { DataTableSkeleton } from "./kom-table-components/table-skeleton"
-import { KomTable } from "./kom-table-components/kom-table"
-import { columns } from "./kom-table-components/columns"
-import { Collections, KomEffortRecord, SegmentRecord } from "../../../../../pocketbase-types"
-import pb from "@/lib/pocketbase"
-import { cookies } from "next/headers"
-import { KomSegment } from "../../../../../types"
-
-const KomPage = async () => {
-  const cookie = cookies().get("pb_auth")
-  if (!cookie) throw new Error("Not logged in")
-
-  const { model } = JSON.parse(cookie.value)
-
-  await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
-  const data: KomSegment[] = await pb.collection(Collections.KomEfforts).getFullList({
-    filter: "(gained_at != null || lost_at != null)",
-    expand: "segment",
-    sort: "-updated",
-    next: { revalidate: 120 },
-  })
-
+export default function KomOverviewPage() {
   return (
-    <div className="container mx-auto py-5 px-4">
-      <React.Suspense
-        fallback={
-          <DataTableSkeleton
-            columnCount={6}
-            searchableColumnCount={1}
-            filterableColumnCount={2}
-            cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem", "8rem"]}
-            shrinkZero
-          />
-        }
-      >
-        <KomTable data={data} columns={columns} />
-      </React.Suspense>
+    <div className="w-full flex my-10 px-5 justify-evenly">
+      <a href="/koms/total">
+        <Button className="w-60 h-10 bg-primary text-primary-foreground">Total</Button>
+      </a>
+      <a href="/koms/delta">
+        <Button className="w-60 h-10 bg-secondary text-secondary-foreground">Delta</Button>
+      </a>
     </div>
   )
 }
-
-export default KomPage

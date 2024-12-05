@@ -42,10 +42,14 @@ export interface WeatherSegment extends SegmentRecord {
   isOwnedKom?: boolean
 }
 
-export interface KomSegment extends KomEffortRecord {
-  expand: {
-    segment: SegmentRecord
-  }
+export interface TableSegment {
+  name: string
+  city: string
+  labels: Label[]
+  lost_at?: number[]
+  gained_at?: number[]
+  has_kom: boolean
+  is_starred: boolean
 }
 
 /*

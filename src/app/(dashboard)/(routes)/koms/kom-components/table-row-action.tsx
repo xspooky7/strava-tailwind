@@ -8,7 +8,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -16,9 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 import { Row } from "@tanstack/react-table"
-import { labels } from "./metadata"
 import { Label } from "../../../../../../types"
 import { SquareChevronRightIcon } from "lucide-react"
+import { labels } from "./metadata"
 
 interface DataTableRowActionsProps<TData> {
   row: Row<any>
@@ -49,9 +48,9 @@ export function TableRowActions<TData>({ row }: DataTableRowActionsProps<TData>)
           <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup value={"temp"}>
-              {labels.map((label: Label) => (
-                <DropdownMenuRadioItem key={label} value={label}>
-                  {label}
+              {labels.map((option) => (
+                <DropdownMenuRadioItem key={option.label} value={option.label}>
+                  {option.label}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>

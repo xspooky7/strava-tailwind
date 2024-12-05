@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Cross2Icon } from "@radix-ui/react-icons"
 import { Table } from "@tanstack/react-table"
 import { TableFacetedFilter } from "./table-faceted-filter"
+import { labels } from "./metadata"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -23,14 +24,7 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
           className="h-8 w-[150px] lg:w-[250px]"
         />
         {table.getColumn("label") && (
-          <TableFacetedFilter
-            column={table.getColumn("label")}
-            title="Label"
-            options={[
-              { label: "Circuit", value: "Circuit" },
-              { label: "Contested", value: "Contested" },
-            ]}
-          />
+          <TableFacetedFilter column={table.getColumn("label")} title="Label" options={labels} />
         )}
         {isFiltered && (
           <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">

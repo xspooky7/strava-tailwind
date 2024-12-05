@@ -18,16 +18,16 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "./table-pagination"
 import { TableToolbar } from "./table-toolbar"
-import { KomSegment } from "../../../../../../types"
+import { TableSegment } from "../../../../../../types"
 
 interface DataTableProps {
-  columns: ColumnDef<KomSegment>[]
-  data: KomSegment[]
+  columns: ColumnDef<TableSegment>[]
+  data: TableSegment[]
 }
 
 export function KomTable({ columns, data }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
   const table = useReactTable({
@@ -61,7 +61,7 @@ export function KomTable({ columns, data }: DataTableProps) {
   return (
     <div className="space-y-4">
       <TableToolbar table={table} />
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
