@@ -8,7 +8,7 @@ export default async function TailwindPage() {
   let statusMessage = ""
   const startTime = performance.now()
 
-  const promises = loadStarredSegments().catch((error) => {
+  /*const promises = loadStarredSegments().catch((error) => {
     console.log(error)
     statusMessage = error.message
   })
@@ -28,6 +28,6 @@ export default async function TailwindPage() {
         <DataTable columns={columns} promises={promises} loadStart={startTime} />
       </React.Suspense>
     </div>
-  )
+  )*/
   return <p>Under Maintenance</p>
 }
