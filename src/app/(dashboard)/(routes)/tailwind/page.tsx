@@ -3,8 +3,10 @@ import { columns } from "./columns"
 import React from "react"
 import { DataTableSkeleton } from "../koms/kom-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
+import { checkAuth } from "@/auth/actions"
 
 export default async function TailwindPage() {
+  await checkAuth()
   let statusMessage = ""
   const startTime = performance.now()
 

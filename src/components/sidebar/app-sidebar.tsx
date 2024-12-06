@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { BikeIcon, CrownIcon, LayoutDashboardIcon, Settings2, WindIcon } from "lucide-react"
+import { CrownIcon, LayoutDashboardIcon, Settings2, WindIcon } from "lucide-react"
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"

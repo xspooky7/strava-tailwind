@@ -6,6 +6,7 @@ import { Collections } from "../../../../../../pocketbase-types"
 import pb from "@/lib/pocketbase"
 import { TableSegment } from "../../../../../../types"
 import { unstable_cache } from "next/cache"
+import { checkAuth } from "@/auth/actions"
 
 const getDeltaData = unstable_cache(
   async () => {
@@ -13,7 +14,8 @@ const getDeltaData = unstable_cache(
     const data = await pb.collection(Collections.KomEfforts).getFullList({
       filter: "(gained_at != null || lost_at != null)",
       expand: "segment",
-      fields: "gained_at,lost_at,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
+      fields:
+        "gained_at,lost_at,has_kom,segment_id,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
       sort: "-updated",
     })
     return data.map((d) => ({
@@ -24,6 +26,7 @@ const getDeltaData = unstable_cache(
       is_starred: d.is_starred,
       has_kom: d.has_kom,
       labels: d.expand!.segment.labels,
+      segment_id: d.segment_id,
     }))
   },
   ["delta"],
@@ -31,6 +34,7 @@ const getDeltaData = unstable_cache(
 )
 
 export default async function DeltaKomPage() {
+  await checkAuth()
   const data: TableSegment[] = await getDeltaData()
 
   return (

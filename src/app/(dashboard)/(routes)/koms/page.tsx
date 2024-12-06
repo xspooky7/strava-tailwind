@@ -1,6 +1,8 @@
+import { checkAuth } from "@/auth/actions"
 import { Button } from "@/components/ui/button"
 
-export default function KomOverviewPage() {
+export default async function KomOverviewPage() {
+  await checkAuth()
   return (
     <div className="w-full flex my-10 px-5 justify-evenly">
       <a href="/koms/total">

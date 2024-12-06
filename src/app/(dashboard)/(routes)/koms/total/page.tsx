@@ -8,6 +8,7 @@ import pb from "@/lib/pocketbase"
 import { cookies } from "next/headers"
 import { TableSegment } from "../../../../../../types"
 import { unstable_cache } from "next/cache"
+import { checkAuth } from "@/auth/actions"
 
 const getTotalData = unstable_cache(
   async () => {
@@ -36,10 +37,7 @@ const getTotalData = unstable_cache(
 )
 
 const KomTotalPage = async () => {
-  const cookie = cookies().get("pb_auth")
-  if (!cookie) throw new Error("Not logged in")
-
-  const { model } = JSON.parse(cookie.value)
+  await checkAuth()
 
   const data: TableSegment[] = await getTotalData()
 

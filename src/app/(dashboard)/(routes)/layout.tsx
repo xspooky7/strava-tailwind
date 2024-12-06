@@ -7,7 +7,7 @@ import { TotalKomCount } from "@/components/total-kom-count"
 import { CrownIcon } from "lucide-react"
 import { Suspense } from "react"
 import { getKomCount } from "@/lib/get-kom-count"
-import { Breadcrumbs } from "../breadcrumbs"
+import { Breadcrumbs } from "../../../components/breadcrumbs"
 import { cookies } from "next/headers"
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {

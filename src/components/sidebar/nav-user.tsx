@@ -1,19 +1,7 @@
 "use client"
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "../ui/sidebar"
+import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from "lucide-react"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "../ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { logout } from "@/auth/actions"
+import { Button } from "../ui/button"
 
 export function NavUser({
   user,
@@ -98,8 +88,12 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
-              Log out
+              <form action={logout}>
+                <Button className="flex align-items p-0 h-5 cursor-default" variant="ghost">
+                  <LogOut />
+                  Log out
+                </Button>
+              </form>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

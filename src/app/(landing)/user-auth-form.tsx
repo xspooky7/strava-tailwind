@@ -1,34 +1,32 @@
 "use client"
 
-import * as React from "react"
-
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import { Label } from "@/components/ui/label"
-import { login } from "../actions/auth-actions"
+import { login } from "../../auth/actions"
+import { useState } from "react"
+import { useFormState } from "react-dom"
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  async function onSubmit(data: FormData) {
-    console.log(data)
-    setIsLoading(true)
-    await login(data).then(() => setIsLoading(false))
-  }
+  const [state, formLogin] = useFormState<any, FormData>(login, null)
+  const inputClass = state ? "border-destructive" : ""
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
-      <form action={login}>
+      <form action={formLogin}>
         <div className="grid gap-2">
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="username">
               Username
             </Label>
             <Input
+              className={inputClass}
               id="username"
               name="username"
               placeholder="Username"
@@ -43,6 +41,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
               Password
             </Label>
             <Input
+              className={inputClass}
               id="password"
               name="password"
               placeholder="Password"
