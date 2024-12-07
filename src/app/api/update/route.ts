@@ -52,8 +52,8 @@ export async function GET(req: Request) {
 
       const komEfforts: KomEffortRecord[] = await pb
         .collection(Collections.KomEfforts)
-        .getFullList({ cache: "no-store" })
-      const dbIds = komEfforts.filter((effort) => effort.has_kom).map((obj: KomEffortRecord) => obj.segment_id)
+        .getFullList({ filter: "has_kom=true", fields: "segment_id" })
+      const dbIds = komEfforts.map((obj: KomEffortRecord) => obj.segment_id)
       const ownedKomIds: number[] = dbIds ? dbIds : []
       log(`[INFO] Kom_Effort count: ${komEfforts.length}, active Koms: ${ownedKomIds.length}`)
       const apiPromises = []
