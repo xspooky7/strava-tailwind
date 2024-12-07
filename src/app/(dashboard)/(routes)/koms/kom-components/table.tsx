@@ -22,14 +22,15 @@ import { TableSegment } from "../../../../../../types"
 
 interface DataTableProps {
   columns: ColumnDef<TableSegment>[]
-  data: TableSegment[]
+  promises: Promise<TableSegment[]>
 }
 
-export function KomTable({ columns, data }: DataTableProps) {
+export function KomTable({ columns, promises }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const data = React.use(promises)
   const table = useReactTable({
     data,
     columns,

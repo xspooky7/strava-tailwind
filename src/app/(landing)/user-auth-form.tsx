@@ -14,6 +14,7 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  // TODO change this to useActionState after updating to React19
   const [state, formLogin] = useFormState<any, FormData>(login, null)
   const inputClass = state ? "border-destructive" : ""
 

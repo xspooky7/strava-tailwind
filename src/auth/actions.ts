@@ -20,6 +20,7 @@ export const getSession = async () => {
 }
 
 export const checkAuth = async () => {
+  console.log("AUTH CHECK")
   const session = await getSession()
   if (!session.isLoggedIn) redirect("/")
   else return session

@@ -2,16 +2,22 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
-import { SIDEBAR_COOKIE_NAME, SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TotalKomCount } from "@/components/total-kom-count"
 import { CrownIcon } from "lucide-react"
 import { Suspense } from "react"
-import { getKomCount } from "@/lib/get-kom-count"
 import { Breadcrumbs } from "../../../components/breadcrumbs"
 import { cookies } from "next/headers"
+import { unstable_cache } from "next/cache"
+import { getKomCount } from "@/data-access/segments"
+
+const getCachedKomCount = unstable_cache(async () => getKomCount(), ["count"], {
+  revalidate: 600,
+  tags: ["count"],
+})
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  const timeseriesRecordPromise = getKomCount()
+  const timeSeriesPromise = getCachedKomCount()
   const sidebarOpen = cookies().get("sidebar:state")?.value ?? "true"
 
   return (
@@ -35,7 +41,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
               <Suspense fallback={<span>0</span>}>
-                <TotalKomCount timeSeriesPromise={timeseriesRecordPromise} />
+                <TotalKomCount timeSeriesPromise={timeSeriesPromise} />
               </Suspense>
             </div>
 
