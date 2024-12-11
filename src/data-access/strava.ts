@@ -29,10 +29,6 @@ export const fetchStarredPage = async (page: number, stravaToken: string) => {
 }
 
 export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boolean]> => {
-  const session = await checkAuth()
-  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
-  pb.authStore.save(session.pbAuth)
   const userTokenRecord: UserTokenRecord = await pb
     .collection(Collections.UserTokens)
     .getFirstListItem(`user = "${process.env.USER_ID}"`, { cache: "no-store" })
