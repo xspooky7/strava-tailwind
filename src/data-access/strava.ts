@@ -1,36 +1,38 @@
-import axios from "axios"
+import pb from "@/lib/pocketbase"
 import { Collections, UserTokenRecord } from "../../pocketbase-types"
-import pb from "./pocketbase"
+import axios from "axios"
+import { checkAuth } from "@/auth/actions"
 
-export const getFromDatabase = async (path: string, settings?: Object): Promise<any> => {
-  const response = await fetch(`${process.env.DATABASE_URL}${path}.json`, {
+export const fetchStarredPage = async (page: number, stravaToken: string) => {
+  const session = await checkAuth()
+  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
+
+  return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
+      Authorization: "Bearer " + stravaToken,
     },
-    ...settings,
-  })
-
-  if (!response.ok) {
-    throw new Error(`Error fetching data: ${response.statusText}`)
-  }
-
-  return await response.json()
-}
-
-export const setDatabase = async (path: string, payload: any): Promise<number> => {
-  const response = await fetch(`${process.env.DATABASE_URL}${path}.json`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
+    next: {
+      tags: ["strava-starred"],
+      revalidate: 240,
     },
-    body: JSON.stringify(payload),
   })
-
-  return response.status
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: Couldn't retrieve starred segment page ${page} from Strava`)
+      }
+      return response.json()
+    })
+    .catch((err) => {
+      throw new Error(`Error 401: Couldn't retrieve starred segment page ${page} from Strava`)
+    })
 }
 
 export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boolean]> => {
+  const session = await checkAuth()
+  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
+
+  pb.authStore.save(session.pbAuth)
   const userTokenRecord: UserTokenRecord = await pb
     .collection(Collections.UserTokens)
     .getFirstListItem(`user = "${process.env.USER_ID}"`, { cache: "no-store" })

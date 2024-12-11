@@ -11,6 +11,7 @@ import { WEATHER_QUERY_INTERVAL } from "../../../../constants"
  */
 
 export async function POST(req: Request) {
+  console.log("CACHE MISS")
   const path: Line[] = await req.json()
   let meteoRequests = 0
   const aggregateDistance: number = path.reduce((prev, curr) => prev + curr.distance, 0)
@@ -59,8 +60,6 @@ export async function POST(req: Request) {
   const cross = (crossAbs / aggregateDistance) * 100
   const head = (headAbs / aggregateDistance) * 100
   const avgTailwindSpeed = aggregateWindspeed / tailAbs
-  //console.log('***WEATHER***')
-  //console.log(`Tailwind: ${tail}% - Crosswind: ${cross}% - Headwind: ${head}%`)
 
   const response: WeatherResponse = {
     path,

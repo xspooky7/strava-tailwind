@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 import { Row } from "@tanstack/react-table"
-import { Label } from "../../../../../../types"
+import { Label } from "../../../../../types"
 import { SquareChevronRightIcon } from "lucide-react"
 import { labels } from "./metadata"
 

@@ -1,10 +1,10 @@
-import { KomTable } from "../kom-components/table"
+import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
 import { unstable_cache } from "next/cache"
 import { checkAuth } from "@/auth/actions"
 import { getDeltaSegments } from "@/data-access/segments"
 import { Suspense } from "react"
-import { DataTableSkeleton } from "../kom-components/table-skeleton"
+import { DataTableSkeleton } from "../../table-components/table-skeleton"
 
 const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"], {
   revalidate: 600,

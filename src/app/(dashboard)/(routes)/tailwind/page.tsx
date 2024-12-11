@@ -1,22 +1,20 @@
-import { DataTable } from "./data-table"
+import { TailwindTable } from "./data-table"
 import { columns } from "./columns"
-import React from "react"
-import { DataTableSkeleton } from "../koms/kom-components/table-skeleton"
+import { DataTableSkeleton } from "../table-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
 import { checkAuth } from "@/auth/actions"
+import { Suspense } from "react"
 
 export default async function TailwindPage() {
-  await checkAuth()
+  const session = await checkAuth()
   let statusMessage = ""
   const startTime = performance.now()
 
-  /*const promises = loadStarredSegments().catch((error) => {
-    console.log(error)
-    statusMessage = error.message
-  })
-  const temp = (
+  const promises = loadStarredSegments()
+
+  /* const temp = (
     <div className="container mx-auto py-5 px-4">
-      <React.Suspense
+      <Suspense
         fallback={
           <DataTableSkeleton
             columnCount={6}
@@ -27,8 +25,8 @@ export default async function TailwindPage() {
           />
         }
       >
-        <DataTable columns={columns} promises={promises} loadStart={startTime} />
-      </React.Suspense>
+        <TailwindTable columns={columns} promises={promises} />
+      </Suspense>
     </div>
   )*/
   return <p>Under Maintenance</p>

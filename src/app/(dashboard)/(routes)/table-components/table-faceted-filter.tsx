@@ -16,7 +16,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
-import { Label } from "../../../../../../types"
+import { Label } from "../../../../../types"
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>

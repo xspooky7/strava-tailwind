@@ -1,9 +1,9 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, Row } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
-import { TableColumnHeader } from "../kom-components/table-column-header"
-import { TableRowActions } from "../kom-components/table-row-action"
+import { TableColumnHeader } from "../../table-components/table-column-header"
+import { TableRowActions } from "../../table-components/table-row-action"
 import { CircleMinusIcon, CirclePlusIcon, StarIcon } from "lucide-react"
 import { TableSegment, Label } from "../../../../../../types"
 
@@ -72,6 +72,7 @@ export const columns: ColumnDef<TableSegment>[] = [
   {
     accessorKey: "status",
     header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
+    sortingFn: (rowA, rowB, columnId) => getDateFromRow(rowA) - getDateFromRow(rowB),
     cell: ({ row }) => {
       let status = ""
       if (row.original.has_kom) {
@@ -103,3 +104,12 @@ export const columns: ColumnDef<TableSegment>[] = [
     cell: ({ row }) => <TableRowActions row={row} />,
   },
 ]
+
+const getDateFromRow = (row: Row<TableSegment>): number => {
+  const { gained_at, lost_at } = row.original
+
+  const lastGained = gained_at?.[gained_at.length - 1] || 0
+  const lastLost = lost_at?.[lost_at.length - 1] || 0
+
+  return Math.max(lastGained, lastLost)
+}

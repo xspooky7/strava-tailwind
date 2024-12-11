@@ -32,14 +32,24 @@ export type WeatherResponse = {
   meteoRequests: number
 }
 
-export interface WeatherSegment extends SegmentRecord {
+export interface TailwindSegment {
+  name: string
+  city: string
+  segment_id: number
+  distance: number
+  has_kom: boolean | null
+  is_starred: boolean
+  average_grade?: number
+  profile_url?: string
+  leader_qom?: string | null
+  labels?: Label[]
+  path: Line[]
   wind?: {
     tail: number
     cross: number
     head: number
     avgTailwindSpeed: number
   }
-  isOwnedKom?: boolean
 }
 
 export interface TableSegment {

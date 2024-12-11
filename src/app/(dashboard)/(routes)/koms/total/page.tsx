@@ -1,5 +1,5 @@
-import { DataTableSkeleton } from "../kom-components/table-skeleton"
-import { KomTable } from "../kom-components/table"
+import { DataTableSkeleton } from "../../table-components/table-skeleton"
+import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
 import { TableSegment } from "../../../../../../types"
 import { unstable_cache } from "next/cache"

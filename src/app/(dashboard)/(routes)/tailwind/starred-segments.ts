@@ -1,12 +1,18 @@
-import { getStravaToken } from "@/lib/database"
-import { Collections, KomEffortRecord, SegmentRecord } from "../../../../../pocketbase-types"
-import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
-import { WeatherSegment } from "../../../../../types"
+import { SegmentRecord } from "../../../../../pocketbase-types"
 import pb from "@/lib/pocketbase"
 import { asError } from "@/lib/utils"
+import {
+  bulkUnstarSegments,
+  fetchNewSegmentRecord,
+  getStarredSegments,
+  processNewSegments,
+} from "@/data-access/segments"
+import { TailwindSegment } from "../../../../../types"
+import { RecordModel } from "pocketbase"
+import { fetchStarredPage, getStravaToken } from "@/data-access/strava"
 
 /**
- * Gathers a detailed version of all currently starred segments using a database as cache to relieve API rates.
+ * Gathers a detailed version of all currently starred segments
  *
  * @returns {WeatherSegment[]} Array of detailed segments.
  * @returns {number} Number of unique requests made to the Strava API.
@@ -19,31 +25,25 @@ export const loadStarredSegments = async () => {
     stravaRequestCount = 0,
     exceededRate = false
 
-  // Fetching stored access token and cached segments
-  await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
-  pb.autoCancellation(false)
+  // Fetching stored access token
   let stravaToken = ""
   try {
-    const [token, wasRefreshed] = await getStravaToken()
+    const [token, _] = await getStravaToken()
     stravaToken = token
   } catch (error) {
     throw new Error("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
   }
 
-  const databaseListRequest: Promise<(KomEffortRecord & { expand: { segment: SegmentRecord } })[]> = pb
-    .collection(Collections.KomEfforts)
-    .getFullList({
-      filter: `user="${process.env.USER_ID}" && is_starred=true`,
-      expand: "segment",
-    })
+  // Fetching stored starred Kom Efforts + Segments and the first page of starred segments from strava
 
   stravaRequestCount++
   let [stravaStarredList, dbKomEffortRecords] = await Promise.all([
     fetchStarredPage(1, stravaToken),
-    databaseListRequest,
+    getStarredSegments(),
   ])
 
-  let starredWeatherSegments: WeatherSegment[] = []
+  // Check If site was full (200 entries) and query the rest of the pages from Strava
+  let starredWeatherSegments: TailwindSegment[] = []
   if (stravaStarredList.length) {
     if (stravaStarredList.length === 200) {
       let i = 2
@@ -56,33 +56,48 @@ export const loadStarredSegments = async () => {
       stravaStarredList = stravaStarredList.flat()
     }
 
-    const knownSegments: (SegmentRecord & { isOwnedKom: boolean })[] = []
-    const newSegmentPromises = stravaStarredList
+    const knownSegments: TailwindSegment[] = []
+    const newSegmentPromises: Promise<SegmentRecord>[] = stravaStarredList
       .filter((apiListEle: any) => {
+        if (apiListEle.id === 4487456) console.log("STRAVA MISTAKE")
         const known = dbKomEffortRecords.find((rec) => rec.segment_id === apiListEle.id)
         if (known) {
-          knownSegments.push({ ...known.expand.segment, isOwnedKom: true })
+          knownSegments.push({
+            name: known.expand!.segment.name,
+            city: known.expand!.segment.city,
+            segment_id: known.segment_id,
+            distance: known.expand!.segment.distance,
+            path: known.expand!.segment.path,
+            is_starred: known.is_starred,
+            has_kom: known.has_kom,
+            labels: known.expand!.segment.labels,
+            average_grade: known.expand!.segment.average_grade,
+            profile_url: known.expand!.segment.profile_url_light,
+            leader_qom: known.expand!.segment.leader_qom,
+          })
           return false
         }
         return true
       })
+      .slice(0, 50) // TODO make this accurate
       .map((apiListEle: any) => {
         stravaRequestCount++
         return fetchNewSegmentRecord(apiListEle.id, stravaToken)
       })
 
-    const falsifyEffortPromises = dbKomEffortRecords
-      .filter((effort: KomEffortRecord) => !stravaStarredList.some((x: any) => x.id === effort.segment_id))
-      .map((effort: KomEffortRecord) => {
-        return pb.collection(Collections.KomEfforts).update(effort.id!, { is_starred: false })
+    const toUnstarEffortRefs = dbKomEffortRecords
+      .filter((effort: RecordModel) => !stravaStarredList.some((x: any) => x.id === effort.segment_id))
+      .map((effort: RecordModel) => {
+        return effort.id
       })
 
     const [newSegmentsSettled, dbFalsifyEfforts] = await Promise.all([
       Promise.allSettled(newSegmentPromises),
-      Promise.all(falsifyEffortPromises),
+      bulkUnstarSegments(toUnstarEffortRefs),
     ])
 
-    const newSegments: (SegmentRecord & { isOwnedKom: boolean })[] = newSegmentsSettled
+    const newTailwindSegments: TailwindSegment[] = []
+    const newSegments: SegmentRecord[] = newSegmentsSettled
       .filter((val) => {
         const isFullfilled = val.status === "fulfilled"
         if (!isFullfilled) exceededRate = true
@@ -90,42 +105,28 @@ export const loadStarredSegments = async () => {
         return isFullfilled
       })
       .map((obj) => {
-        return { ...obj.value, isOwnedKom: false }
+        newTailwindSegments.push({
+          name: obj.value.name,
+          city: obj.value.city,
+          segment_id: obj.value.segment_id,
+          distance: obj.value.distance,
+          path: obj.value.path!,
+          is_starred: true,
+          has_kom: false,
+          labels: obj.value.labels,
+          average_grade: obj.value.average_grade,
+          profile_url: obj.value.profile_url_light,
+          leader_qom: obj.value.leader_qom,
+        })
+        return { ...obj.value }
       })
 
-    const starredSegments = newSegments.concat(knownSegments)
+    const tailwindSegments = newTailwindSegments.concat(knownSegments)
 
-    const [komEffortUpdate, newStarredWeatherSegments]: [any[], WeatherSegment[]] = await Promise.all([
+    const [_, newStarredWeatherSegments]: [void, TailwindSegment[]] = await Promise.all([
+      processNewSegments(newSegments),
       Promise.all(
-        newSegments.map(async (segment) => {
-          try {
-            const komEffort: KomEffortRecord = await pb
-              .collection(Collections.KomEfforts)
-              .getFirstListItem(`segment_id:${segment.segment_id}`)
-
-            komEffort.is_starred = true
-            return pb.collection(Collections.KomEfforts).update(komEffort.id!, komEffort)
-          } catch (err) {
-            let seg_ref: SegmentRecord
-            try {
-              seg_ref = await pb.collection(Collections.Segments).getFirstListItem(`segment_id:${segment.segment_id}`)
-            } catch (err) {
-              const { isOwnedKom, ...uploadSegment } = segment
-              seg_ref = await pb.collection(Collections.Segments).create(uploadSegment)
-            }
-            const newRecord: KomEffortRecord = {
-              segment: seg_ref.id!,
-              user: process.env.USER_ID!,
-              segment_id: seg_ref.segment_id,
-              is_starred: true,
-              has_kom: false,
-            }
-            return pb.collection(Collections.KomEfforts).create(newRecord)
-          }
-        })
-      ),
-      Promise.all(
-        starredSegments.map(async (segment) => {
+        tailwindSegments.map(async (segment) => {
           const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
             method: "POST",
             headers: {
@@ -148,22 +149,4 @@ export const loadStarredSegments = async () => {
     meteoRequestCount,
     exceededRate,
   }
-}
-const fetchStarredPage = async (page: number, stravaToken: string) => {
-  return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + stravaToken,
-    },
-    next: { revalidate: 600 },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: Couldn't retrieve starred segment page ${page} from Strava`)
-      }
-      return response.json()
-    })
-    .catch((err) => {
-      throw new Error(`Error 401: Couldn't retrieve starred segment page ${page} from Strava`)
-    })
 }

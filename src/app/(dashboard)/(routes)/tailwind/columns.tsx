@@ -1,38 +1,22 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { ColumnDef } from "@tanstack/react-table"
-import {
-  ChevronsLeftRightEllipsisIcon,
-  ChevronsUpDownIcon,
-  CrownIcon,
-  MoreHorizontal,
-  MountainIcon,
-  PercentIcon,
-  SquareChevronRight,
-  StarOffIcon,
-  WindIcon,
-} from "lucide-react"
+import { ChevronsLeftRightEllipsisIcon, CrownIcon, MountainIcon, PercentIcon, WindIcon } from "lucide-react"
 import Image from "next/image"
-import { Label, WeatherSegment } from "../../../../../types"
-import { unstarSegment } from "@/lib/unstar-segment"
+import { Label, TailwindSegment } from "../../../../../types"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { TableColumnHeader } from "../table-components/table-column-header"
 
-export const columns: ColumnDef<WeatherSegment>[] = [
+export const columns: ColumnDef<TailwindSegment>[] = [
   {
-    accessorKey: "isOwnedKom",
+    accessorKey: "kom",
     header: "",
     cell: ({ row }) => {
       let crownColor = "text-muted"
-      if (row.original.isOwnedKom) crownColor = "text-amber-400"
+      if (row.original.has_kom) crownColor = "text-amber-300"
       else if (!row.original.leader_qom) crownColor = "text-pink-300"
       return (
         <div className="flex justify-center">
@@ -43,52 +27,46 @@ export const columns: ColumnDef<WeatherSegment>[] = [
   },
   {
     accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Name
-          <ChevronsUpDownIcon className="h-2 w-2" />
-        </Button>
-      )
-    },
+    header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
+      const labels = row.original.labels
       return (
         <div className="flex space-x-2">
-          {row.original.labels &&
-            row.original.labels.slice(0, 2).map((c: Label) => (
-              <Badge key={c} variant="outline">
+          {labels &&
+            labels.slice(0, 2).map((c: Label) => (
+              <Badge
+                key={c}
+                variant="outline"
+                className="text-primary dark:text-secondary border-primary dark:border-secondary"
+              >
                 {c}
               </Badge>
             ))}
-          <span>{row.original.name}</span>
+          <span className="max-w-[500px] truncate font-medium">{row.original.name}</span>
         </div>
       )
     },
   },
   {
-    accessorKey: "city",
-    header: ({ column }) => {
-      return (
-        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          City
-          <ChevronsUpDownIcon className="h-2 w-2" />
-        </Button>
-      )
+    id: "label",
+    accessorKey: "label",
+    filterFn: (row, id, value) => {
+      if (row.original.labels) return value.every((element: Label) => row.original.labels!.includes(element))
+      return false
     },
+    header: ({ column }) => null,
+    cell: ({ row }) => null,
+  },
+  {
+    accessorKey: "city",
+    header: ({ column }) => <TableColumnHeader column={column} title="City" />,
     cell: ({ row }) => {
       return <span>{row.original.city ? row.original.city : "-"}</span>
     },
   },
   {
     accessorKey: "terrain",
-    header: ({ column }) => {
-      return (
-        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Terrain
-          <ChevronsUpDownIcon className="h-2 w-2" />
-        </Button>
-      )
-    },
+    header: ({ column }) => <TableColumnHeader column={column} title="Terrain" />,
     cell: ({ row }) => {
       let distance = Math.round(row.original.distance) + "m"
       if (distance.length > 4) distance = Math.round(row.original.distance / 100) / 10 + "km"
@@ -105,21 +83,14 @@ export const columns: ColumnDef<WeatherSegment>[] = [
   },
   {
     accessorKey: "profile",
-    header: "Profile",
+    header: ({ column }) => <TableColumnHeader column={column} title="Profile" />,
     cell: ({ row }) => {
-      return <Image src={row.original.profile_url_light!} alt="nig" width={112} height={32} />
+      return <Image src={row.original.profile_url!} alt="" width={112} height={32} />
     },
   },
   {
     accessorKey: "tail",
-    header: ({ column }) => {
-      return (
-        <Button className="-ml-4" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Tailwind
-          <ChevronsUpDownIcon className="h-2 w-2" />
-        </Button>
-      )
-    },
+    header: ({ column }) => <TableColumnHeader column={column} title="Tailwind" />,
     accessorFn: (row) => row.wind!.tail,
     cell: ({ row }) => {
       const color = row.original.wind!.tail >= 90 ? "" : ""
@@ -131,38 +102,6 @@ export const columns: ColumnDef<WeatherSegment>[] = [
           <PercentIcon className={"h-4 w-4 text-muted-foreground" + color} />
           <span className={"ml-3 text-primary" + color}>{Math.round(row.original.wind!.tail)}</span>
         </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    header: "",
-    cell: ({ row }) => {
-      const payment = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open("https://www.strava.com/segments/" + row.original.id, "_blank", "noopener,noreferrer")
-              }
-            >
-              <SquareChevronRight className="h-4 w-4" />
-              View on Strava
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => unstarSegment(row.original.segment_id)}>
-              <StarOffIcon className="h-4 w-4" />
-              Unstar Segment
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       )
     },
   },

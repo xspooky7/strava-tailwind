@@ -32,7 +32,7 @@ export function KomTable({ columns, promises }: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
     {
       desc: true,
-      id: "sstatus",
+      id: "status",
     },
   ])
   const data = React.use(promises)

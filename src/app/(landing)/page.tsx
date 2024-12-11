@@ -23,7 +23,7 @@ export default function LandingPage() {
             className="hidden dark:block h-full w-full object-cover dark:brightness-[0.4] dark:grayscsale"
           />
         </div>
-        <div className="relative z-20 flex items-center text-lg font-medium">
+        <div className="relative z-20 flex items-center text-lg font-medium text-primary">
           <Icons.logo color="#FFF" className="pr-2" />
           Strava
           <br />

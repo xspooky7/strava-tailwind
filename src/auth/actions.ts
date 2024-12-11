@@ -20,7 +20,6 @@ export const getSession = async () => {
 }
 
 export const checkAuth = async () => {
-  console.log("AUTH CHECK")
   const session = await getSession()
   if (!session.isLoggedIn) redirect("/")
   else return session
@@ -46,7 +45,6 @@ export const login = async (prevState: { error: null | boolean }, formData: Form
     await session.save()
     redirectPath = "/dashboard"
   } catch (err) {
-    console.log("dfdsf")
     return true
   }
   if (redirectPath) redirect(redirectPath)

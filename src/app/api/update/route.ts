@@ -1,11 +1,11 @@
-import { getStravaToken } from "@/lib/database"
 import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
-import { fetchNewSegmentRecord } from "@/lib/fetch-segment-record"
 import pb from "@/lib/pocketbase"
 import { asError } from "@/lib/utils"
+import { getStravaToken } from "@/data-access/strava"
+import { fetchNewSegmentRecord } from "@/data-access/segments"
 
 export const maxDuration = 60 // vercel
 
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
 
       const komEfforts: KomEffortRecord[] = await pb
         .collection(Collections.KomEfforts)
-        .getFullList({ filter: "has_kom=true", fields: "segment_id, id" })
+        .getFullList({ filter: "has_kom=true", fields: "segment_id, id, gained_at, lost_at" })
       const dbIds = komEfforts.map((obj: KomEffortRecord) => obj.segment_id)
       const ownedKomIds: number[] = dbIds ? dbIds : []
       log(`[INFO] Kom_Effort count: ${komEfforts.length}, active Koms: ${ownedKomIds.length}`)
