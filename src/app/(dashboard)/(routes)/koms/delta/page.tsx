@@ -28,7 +28,7 @@ export default async function DeltaKomPage() {
           />
         }
       >
-        <KomTable promises={data} columns={columns} />
+        <KomTable promises={data} columns={columns} sort="status" />
       </Suspense>
     </div>
   )

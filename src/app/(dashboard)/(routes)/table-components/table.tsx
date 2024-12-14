@@ -23,16 +23,17 @@ import { TableSegment } from "../../../../../types"
 interface DataTableProps {
   columns: ColumnDef<TableSegment>[]
   promises: Promise<TableSegment[]>
+  sort: string
 }
 
-export function KomTable({ columns, promises }: DataTableProps) {
+export function KomTable({ columns, promises, sort }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([
     {
       desc: true,
-      id: "status",
+      id: sort,
     },
   ])
   const data = React.use(promises)

@@ -1,6 +1,7 @@
 "use server"
 
 import { SessionData } from "@/auth/lib"
+import { unstable_cacheLife as cacheLife } from "next/cache"
 import pb from "@/lib/pocketbase"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../pocketbase-types"
 import { TableSegment } from "../../types"
@@ -57,7 +58,7 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
 
 export const getTotalSegments = async (session: SessionData): Promise<TableSegment[]> => {
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
+  console.log("GETTOTAL")
   pb.authStore.save(session.pbAuth)
 
   const data = await pb.collection(Collections.KomEfforts).getFullList({
@@ -104,10 +105,16 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
   return Promise.all(recordIds.map((id) => pb.collection(Collections.KomEfforts).update(id, { is_starred: false })))
 }
 
-export const getKomCount = async (): Promise<KomTimeseriesRecord> => {
-  // TODO replace admin auth
+export const getCachedKomCount = async (isLoggedIn: boolean, pbAuth: string): Promise<KomTimeseriesRecord> => {
+  "use cache"
+  cacheLife({
+    stale: 300, // 5 min
+    revalidate: 300, // 5 min
+    expire: 3600, // 1 hour
+  })
+  if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
+  pb.authStore.save(pbAuth!)
 
-  pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
   const timeseriesRecordPromise: Promise<KomTimeseriesRecord> = pb
     .collection(Collections.KomTimeseries)
     .getFirstListItem("", {

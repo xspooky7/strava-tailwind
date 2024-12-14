@@ -10,9 +10,9 @@ export default async function TailwindPage() {
   let statusMessage = ""
   const startTime = performance.now()
 
-  const promises = loadStarredSegments()
+  /*const promises = loadStarredSegments()
 
-  /* const temp = (
+  const temp = (
     <div className="container mx-auto py-5 px-4">
       <Suspense
         fallback={

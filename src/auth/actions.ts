@@ -6,9 +6,11 @@ import { Collections } from "../../pocketbase-types"
 import pb from "@/lib/pocketbase"
 import { getIronSession } from "iron-session"
 import { defaultSession, SessionData, sessionOptions } from "./lib"
+import { cache } from "react"
 
-export const getSession = async () => {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions)
+export const getSession = cache(async () => {
+  console.log("session")
+  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
 
   if (!session.isLoggedIn) {
     session.isLoggedIn = defaultSession.isLoggedIn
@@ -17,9 +19,10 @@ export const getSession = async () => {
   // TODO Validation goes here
 
   return session
-}
+})
 
 export const checkAuth = async () => {
+  console.log("CHECK AUTH")
   const session = await getSession()
   if (!session.isLoggedIn) redirect("/")
   else return session

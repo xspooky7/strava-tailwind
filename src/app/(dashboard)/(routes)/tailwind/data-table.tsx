@@ -21,7 +21,7 @@ import { TableToolbar } from "../table-components/table-toolbar"
 import { TailwindSegment } from "../../../../../types"
 import { RowActions } from "./row-action"
 import { toggleStarEffort } from "@/data-access/segments"
-import { revalidatePath, revalidateTag } from "next/cache"
+import { revalidateTag } from "next/cache"
 
 interface DataTableProps {
   columns: ColumnDef<TailwindSegment>[]
@@ -42,8 +42,8 @@ export function TailwindTable({ columns, promises }: DataTableProps) {
   const handleUnstar = (id: number) => {
     toggleStarEffort(id, true)
       .then(() => {
+        console.log("revalidate")
         setData((prevData) => prevData.filter((segment) => segment.segment_id !== id))
-        revalidatePath("/tailwind")
         revalidateTag("strava-starred")
       })
       .catch((err) => console.log(JSON.stringify(err)))

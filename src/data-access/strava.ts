@@ -14,7 +14,6 @@ export const fetchStarredPage = async (page: number, stravaToken: string) => {
     },
     next: {
       tags: ["strava-starred"],
-      revalidate: 240,
     },
   })
     .then((response) => {

@@ -6,16 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import { Label } from "@/components/ui/label"
 import { login } from "../../auth/actions"
-import { useState } from "react"
-import { useFormState } from "react-dom"
+import { useState, useActionState } from "react"
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  // TODO change this to useActionState after updating to React19
-  const [state, formLogin] = useFormState<any, FormData>(login, null)
+  const [state, formLogin] = useActionState<any, FormData>(login, null)
   const inputClass = state ? "border-destructive" : ""
 
   return (

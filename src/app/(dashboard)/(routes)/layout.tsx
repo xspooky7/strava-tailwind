@@ -3,22 +3,17 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { TotalKomCount } from "@/components/total-kom-count"
 import { CrownIcon } from "lucide-react"
-import { Suspense } from "react"
 import { Breadcrumbs } from "../../../components/breadcrumbs"
 import { cookies } from "next/headers"
-import { unstable_cache } from "next/cache"
-import { getKomCount } from "@/data-access/segments"
-
-const getCachedKomCount = unstable_cache(async () => getKomCount(), ["count"], {
-  revalidate: 600,
-  tags: ["count"],
-})
+import { getCachedKomCount } from "@/data-access/segments"
+import { checkAuth } from "@/auth/actions"
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  const timeSeriesPromise = getCachedKomCount()
-  const sidebarOpen = cookies().get("sidebar:state")?.value ?? "true"
+  const { isLoggedIn, pbAuth } = await checkAuth()
+  const timeSeriesPromise = await getCachedKomCount(isLoggedIn, pbAuth!)
+  const cookieStore = await cookies()
+  const sidebarOpen = cookieStore.get("sidebar:state")?.value ?? "true"
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen === "true"}>
@@ -40,11 +35,8 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
           <div className="flex space-x-2">
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
-              <Suspense fallback={<span>0</span>}>
-                <TotalKomCount timeSeriesPromise={timeSeriesPromise} />
-              </Suspense>
+              <span>{timeSeriesPromise.amount}</span>
             </div>
-
             <ThemeToggle />
           </div>
         </header>

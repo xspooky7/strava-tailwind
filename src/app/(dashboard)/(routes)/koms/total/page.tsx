@@ -14,7 +14,7 @@ const getCachedTotalData = unstable_cache(async (session) => getTotalSegments(se
 
 const KomTotalPage = async () => {
   const session = await checkAuth()
-
+  console.log("PAGE")
   const data: Promise<TableSegment[]> = getCachedTotalData(session)
 
   return (
@@ -30,7 +30,7 @@ const KomTotalPage = async () => {
           />
         }
       >
-        <KomTable promises={data} columns={columns} />
+        <KomTable promises={data} columns={columns} sort="city" />
       </Suspense>
     </div>
   )

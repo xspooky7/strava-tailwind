@@ -10,6 +10,7 @@ import {
 import { TailwindSegment } from "../../../../../types"
 import { RecordModel } from "pocketbase"
 import { fetchStarredPage, getStravaToken } from "@/data-access/strava"
+import { checkAuth } from "@/auth/actions"
 
 /**
  * Gathers a detailed version of all currently starred segments
@@ -21,6 +22,9 @@ import { fetchStarredPage, getStravaToken } from "@/data-access/strava"
  */
 
 export const loadStarredSegments = async () => {
+  const session = await checkAuth()
+  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
+  pb.authStore.save(session.pbAuth)
   let meteoRequestCount = 0,
     stravaRequestCount = 0,
     exceededRate = false
@@ -59,7 +63,6 @@ export const loadStarredSegments = async () => {
     const knownSegments: TailwindSegment[] = []
     const newSegmentPromises: Promise<SegmentRecord>[] = stravaStarredList
       .filter((apiListEle: any) => {
-        if (apiListEle.id === 4487456) console.log("STRAVA MISTAKE")
         const known = dbKomEffortRecords.find((rec) => rec.segment_id === apiListEle.id)
         if (known) {
           knownSegments.push({
