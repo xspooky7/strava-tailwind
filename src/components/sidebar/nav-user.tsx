@@ -12,8 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { logout } from "@/auth/actions"
 import { Button } from "../ui/button"
+import { logout } from "@/app/lib/auth/actions"
 
 export function NavUser({
   user,

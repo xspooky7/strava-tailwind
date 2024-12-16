@@ -9,23 +9,6 @@ import { TableSegment, Label } from "../../../../../../types"
 
 export const columns: ColumnDef<TableSegment>[] = [
   {
-    id: "star",
-    cell: ({ row }) => {
-      return (
-        <div className="flex justify-center">
-          <StarIcon
-            className={
-              "h-5 w-5 translate-y-[2px] hover:text-amber-400 hover:fill-amber-400 cursor-pointer" +
-              (row.original.is_starred ? " text-amber-400 fill-amber-400" : " text-muted")
-            }
-          />
-        </div>
-      )
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: "name",
     filterFn: (row, _cloumnId: string, filterValue: string) =>
       row.original.name.toLowerCase().includes(filterValue.toLowerCase()) ||

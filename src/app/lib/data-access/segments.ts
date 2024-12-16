@@ -1,15 +1,20 @@
 "use server"
 
-import { SessionData } from "@/auth/lib"
-import { unstable_cacheLife as cacheLife } from "next/cache"
-import pb from "@/lib/pocketbase"
-import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../pocketbase-types"
-import { TableSegment } from "../../types"
-import { checkAuth } from "@/auth/actions"
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+  revalidatePath,
+  revalidateTag,
+} from "next/cache"
+import pb from "@/app/lib/pocketbase"
+import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
+import { TableSegment } from "../../../../types"
 import { RecordModel } from "pocketbase"
 import axios from "axios"
-import { getLabel, getPath, sanatizeSegment } from "@/lib/utils"
+import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
+import { SessionData } from "../auth/lib"
+import { verifySession } from "../auth/actions"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -34,6 +39,9 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
 }
 
 export const getDeltaSegments = async (session: SessionData): Promise<TableSegment[]> => {
+  "use cache"
+  cacheLife("hours")
+  cacheTag("delta")
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
@@ -41,10 +49,11 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
     filter: "(gained_at != null || lost_at != null)",
     expand: "segment",
     fields:
-      "gained_at,lost_at,has_kom,segment_id,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
+      "segment_id,gained_at,lost_at,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
     sort: "-updated",
   })
   return data.map((d) => ({
+    segment_id: d.segment_id,
     name: d.expand!.segment.name,
     city: d.expand!.segment.city,
     lost_at: d.lost_at,
@@ -52,11 +61,14 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
     is_starred: d.is_starred,
     has_kom: d.has_kom,
     labels: d.expand!.segment.labels,
-    segment_id: d.segment_id,
   }))
 }
 
 export const getTotalSegments = async (session: SessionData): Promise<TableSegment[]> => {
+  "use cache"
+  cacheLife("hours")
+  cacheTag("total")
+
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
   console.log("GETTOTAL")
   pb.authStore.save(session.pbAuth)
@@ -65,15 +77,15 @@ export const getTotalSegments = async (session: SessionData): Promise<TableSegme
     filter: "has_kom=true",
     expand: "segment",
     fields:
-      "gained_at,lost_at,has_kom,segment_id,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
+      "segment_id,gained_at,lost_at,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
     sort: "-updated",
   })
   return data.map((d) => ({
+    segment_id: d.segment_id,
     name: d.expand!.segment.name,
     city: d.expand!.segment.city,
     lost_at: d.lost_at,
     gained_at: d.gained_at,
-    segment_id: d.segment_id,
     is_starred: d.is_starred,
     has_kom: d.has_kom,
     labels: d.expand!.segment.labels,
@@ -81,7 +93,7 @@ export const getTotalSegments = async (session: SessionData): Promise<TableSegme
 }
 
 export const getStarredSegments = async (): Promise<RecordModel[]> => {
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
@@ -98,20 +110,16 @@ export const getStarredSegments = async (): Promise<RecordModel[]> => {
 
 export const bulkUnstarSegments = async (recordIds: string[]) => {
   if (!recordIds.length) return
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
   return Promise.all(recordIds.map((id) => pb.collection(Collections.KomEfforts).update(id, { is_starred: false })))
 }
 
-export const getCachedKomCount = async (isLoggedIn: boolean, pbAuth: string): Promise<KomTimeseriesRecord> => {
+export const getKomCount = async (isLoggedIn: boolean, pbAuth: string): Promise<KomTimeseriesRecord> => {
   "use cache"
-  cacheLife({
-    stale: 300, // 5 min
-    revalidate: 300, // 5 min
-    expire: 3600, // 1 hour
-  })
+  cacheLife("hours")
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(pbAuth!)
 
@@ -128,7 +136,7 @@ export const getCachedKomCount = async (isLoggedIn: boolean, pbAuth: string): Pr
  * @param {SegmentRecord[]} segments
  */
 export const processNewSegments = async (segments: SegmentRecord[]): Promise<void> => {
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
@@ -160,7 +168,7 @@ export const processNewSegments = async (segments: SegmentRecord[]): Promise<voi
 }
 
 export const toggleStarEffort = async (segment_id: number, status: boolean) => {
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
@@ -206,4 +214,8 @@ export const toggleStarEffort = async (segment_id: number, status: boolean) => {
   } catch (stravaError) {
     throw new Error("Failed to toggle star on Strava")
   }
+}
+
+export async function revalidate(tag: string) {
+  revalidatePath("/koms/delta")
 }

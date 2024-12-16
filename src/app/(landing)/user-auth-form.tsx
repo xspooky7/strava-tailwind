@@ -1,12 +1,12 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/app/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import { Label } from "@/components/ui/label"
-import { login } from "../../auth/actions"
 import { useState, useActionState } from "react"
+import { login } from "../lib/auth/actions"
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 

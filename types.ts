@@ -53,6 +53,7 @@ export interface TailwindSegment {
 }
 
 export interface TableSegment {
+  segment_id: number
   name: string
   city: string
   labels: Label[]

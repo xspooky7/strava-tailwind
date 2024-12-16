@@ -1,9 +1,9 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { getGreatCircleBearing, getPreciseDistance } from "geolib"
-import { THRESHHOLD } from "../../constants"
-import { Line, Label, Coordinate } from "../../types"
-import { SegmentRecord } from "../../pocketbase-types"
+import { THRESHHOLD } from "../../../constants"
+import { Line, Label, Coordinate } from "../../../types"
+import { SegmentRecord } from "../../../pocketbase-types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

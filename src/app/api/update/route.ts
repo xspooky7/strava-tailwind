@@ -2,9 +2,9 @@ import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
-import pb from "@/lib/pocketbase"
-import { getStravaToken } from "@/data-access/strava"
-import { fetchNewSegmentRecord } from "@/data-access/segments"
+import pb from "@/app/lib/pocketbase"
+import { getStravaToken } from "@/app/lib/data-access/strava"
+import { fetchNewSegmentRecord } from "@/app/lib/data-access/segments"
 
 export const maxDuration = 60 // vercel
 
@@ -17,23 +17,22 @@ export async function GET(req: Request) {
     const headersList = await headers()
     const apiKey = headersList.get("x-api-key")
     if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
-    const userId = process.env.USER_ID!
 
+    const userId = process.env.USER_ID!
     let exceededRate = false
     const date = new Date()
     const currentHour = (date.getUTCHours() + 1) % 24 //CEST
     const currentMinute = date.getUTCMinutes()
-
-    if (currentHour < 7 && headersList.get("night-override") === null) {
-      return new NextResponse("Night", { status: 201 })
-    }
+    const now = date.getTime()
 
     log(
       `[INIT] ${currentHour < 10 ? "0" + currentHour : currentHour} : ${
         currentMinute < 10 ? "0" + currentMinute : currentMinute
       } CEST`
     )
-    const now = date.getTime()
+    if (currentHour < 7 && headersList.get("night-override") === null) {
+      return new NextResponse("Night", { status: 201 })
+    }
 
     log("[AUTH] Initializing Pocketbase")
     await pb.admins.authWithPassword(process.env.ADMIN_EMAIL!, process.env.ADMIN_PW!)
@@ -50,17 +49,17 @@ export async function GET(req: Request) {
     }
     log(stravaToken + " - Success")
 
-    log("[DATABASE] Fetching Kom_Effort Collection")
-    const komEfforts: KomEffortRecord[] = await pb.collection(Collections.KomEfforts).getFullList({
+    log("[DATABASE] Fetching Kom Effort Collection")
+    const userEfforts: KomEffortRecord[] = await pb.collection(Collections.KomEfforts).getFullList({
       filter: `user="${userId}"`,
       fields: "segment_id, id, has_kom, gained_at, lost_at",
       cache: "no-store",
     })
-    const ownedKomIds: Set<number> = komEfforts
-      ? new Set(komEfforts.filter((obj: KomEffortRecord) => obj.has_kom).map((obj: KomEffortRecord) => obj.segment_id))
+    const ownedKomIds: Set<number> = userEfforts
+      ? new Set(userEfforts.filter((obj: KomEffortRecord) => obj.has_kom).map((obj: KomEffortRecord) => obj.segment_id))
       : new Set()
 
-    log(`[INFO] Kom_Effort count: ${komEfforts.length}, active Koms: ${ownedKomIds.size}`)
+    log(`[INFO] Kom Effort count: ${userEfforts.length}, active Koms: ${ownedKomIds.size}`)
     const apiPromises: Promise<Set<number>>[] = []
     let apiResults: Set<number>[] = []
     let apiIds: Set<number> = new Set()
@@ -100,15 +99,18 @@ export async function GET(req: Request) {
       if (lostKomIds.size) {
         log("[INFO] Processing lost Koms")
         lostKomIds.forEach((lostId) => {
-          const effort = komEfforts.find((effort) => effort.segment_id === lostId)
-          if (effort == null || effort.id == null)
+          const storedEffort = userEfforts.find((effort) => effort.segment_id === lostId)
+          if (storedEffort == null || storedEffort.id == null)
             return errorResponse("Couldn't resolve lost effort, which was expected", 512, { id: lostId })
-          const timeline = effort.lost_at ? effort.lost_at : []
+          const timeline = storedEffort.lost_at ? storedEffort.lost_at : []
+          log(
+            `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
+          )
           concurrentUpdates.push(
             pb
               .collection(Collections.KomEfforts)
               .update(
-                effort.id,
+                storedEffort.id,
                 {
                   lost_at: timeline.concat(now),
                   has_kom: false,
@@ -127,7 +129,6 @@ export async function GET(req: Request) {
                 )
               })
           )
-          DEBUG_LOG += "Updated: " + lostId
         })
       }
 
@@ -135,15 +136,17 @@ export async function GET(req: Request) {
       if (gainedKomIds.size) {
         log("[INFO] Processing gained Koms")
         for (const gainedId of gainedKomIds) {
-          const storedEffort = komEfforts.find((effort) => effort.segment_id === gainedId)
+          const storedEffort = userEfforts.find((effort) => effort.segment_id === gainedId)
           if (storedEffort) {
             const timeline = storedEffort.gained_at ? storedEffort.gained_at : []
-            try {
-              log(
-                `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, seg_ref:${storedEffort.id})`
-              )
-              concurrentUpdates.push(
-                pb.collection(Collections.KomEfforts).update(
+
+            log(
+              `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
+            )
+            concurrentUpdates.push(
+              pb
+                .collection(Collections.KomEfforts)
+                .update(
                   storedEffort.id!,
                   {
                     gained_at: timeline.concat(now),
@@ -151,16 +154,18 @@ export async function GET(req: Request) {
                   },
                   { cache: "no-store" }
                 )
-              )
-            } catch (error) {
-              return errorResponse(
-                `Error occured while updating a present Kom Effort Record 
-                    (seg_id:${storedEffort.segment_id}, seg_ref:${storedEffort.id})`,
-                514,
-                error,
-                gainedId
-              )
-            }
+                .then(() =>
+                  log(`[DATABASE] Succesfully updated an existing Kom Effort Record to gained (seg_id:${gainedId})`)
+                )
+                .catch((error) => {
+                  return errorResponse(
+                    `Error occured while updating an existing Kom Effort Record to gained (seg_id:${gainedId})`,
+                    514,
+                    error,
+                    gainedId
+                  )
+                })
+            )
           } else {
             let seg_ref,
               segment: SegmentRecord | null = null
@@ -168,7 +173,7 @@ export async function GET(req: Request) {
               log(`[DATABASE] Trying to fetch Segment (seg_id: ${gainedId})`)
               seg_ref = await pb.collection(Collections.Segments).getFirstListItem(`segment_id="${gainedId}"`)
             } catch {
-              // TODO make this catch conditional for error type: not found
+              // TODO make this catch conditional for only one type of error otherwise populate error
               log(`[DATABASE] Couldn't find segment (seg_id: ${gainedId})`)
 
               try {
@@ -191,7 +196,7 @@ export async function GET(req: Request) {
               }
             }
 
-            log(`[DATABASE] Creating Kom_Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
+            log(`[DATABASE] Creating Kom Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
             const newEffort: KomEffortRecord = {
               segment: seg_ref.id!,
               user: userId,
@@ -238,7 +243,7 @@ export async function GET(req: Request) {
       )
       await Promise.all(concurrentUpdates)
     } else {
-      log(`[INFO] Arrays are equal (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
+      log(`[INFO] Sets are identical (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
     }
     log(`[INFO] Requests made to Strava - ${STRAVA_REQUEST_COUNT}, Rate exceeded - ${exceededRate}`)
     log("[EXIT] 200")
@@ -249,7 +254,7 @@ export async function GET(req: Request) {
   }
 }
 
-//STRAVA API FUNCTION
+//Strava Api
 const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, delay = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -276,6 +281,7 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
   throw new Error(`503 error on fetching page ${page} after ${retries} retries.`)
 }
 
+//Helper
 const log = (message: string, newline = true, payload?: object) => {
   console.log(message)
   DEBUG_LOG += `${message}${newline ? "\n" : ""}`

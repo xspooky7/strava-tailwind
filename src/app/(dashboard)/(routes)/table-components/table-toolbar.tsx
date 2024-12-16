@@ -6,6 +6,8 @@ import { Cross2Icon } from "@radix-ui/react-icons"
 import { Table } from "@tanstack/react-table"
 import { TableFacetedFilter } from "./table-faceted-filter"
 import { labels } from "./metadata"
+import { RefreshCwIcon } from "lucide-react"
+import { revalidate } from "@/app/lib/data-access/segments"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -23,6 +25,9 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
+        <Button className="h-8 w-8" variant="outline" size="icon" onClick={async () => await revalidate("delta")}>
+          <RefreshCwIcon className="h-4 w-4" />
+        </Button>
         {table.getColumn("label") && (
           <TableFacetedFilter column={table.getColumn("label")} title="Label" options={labels} />
         )}

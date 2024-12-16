@@ -1,16 +1,16 @@
 import { SegmentRecord } from "../../../../../pocketbase-types"
-import pb from "@/lib/pocketbase"
-import { asError } from "@/lib/utils"
+import pb from "@/app/lib/pocketbase"
+import { asError } from "@/app/lib/utils"
 import {
   bulkUnstarSegments,
   fetchNewSegmentRecord,
   getStarredSegments,
   processNewSegments,
-} from "@/data-access/segments"
+} from "@/app/lib/data-access/segments"
 import { TailwindSegment } from "../../../../../types"
 import { RecordModel } from "pocketbase"
-import { fetchStarredPage, getStravaToken } from "@/data-access/strava"
-import { checkAuth } from "@/auth/actions"
+import { fetchStarredPage, getStravaToken } from "@/app/lib/data-access/strava"
+import { verifySession } from "@/app/lib/auth/actions"
 
 /**
  * Gathers a detailed version of all currently starred segments
@@ -22,7 +22,7 @@ import { checkAuth } from "@/auth/actions"
  */
 
 export const loadStarredSegments = async () => {
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(session.pbAuth)
   let meteoRequestCount = 0,

@@ -1,10 +1,12 @@
-import pb from "@/lib/pocketbase"
-import { Collections, UserTokenRecord } from "../../pocketbase-types"
+"use server"
+
+import pb from "@/app/lib/pocketbase"
+import { Collections, UserTokenRecord } from "../../../../pocketbase-types"
 import axios from "axios"
-import { checkAuth } from "@/auth/actions"
+import { verifySession } from "../auth/actions"
 
 export const fetchStarredPage = async (page: number, stravaToken: string) => {
-  const session = await checkAuth()
+  const session = await verifySession()
   if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {

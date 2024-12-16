@@ -1,7 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-
 import { ColumnDef } from "@tanstack/react-table"
 import { ChevronsLeftRightEllipsisIcon, CrownIcon, MountainIcon, PercentIcon, WindIcon } from "lucide-react"
 import Image from "next/image"

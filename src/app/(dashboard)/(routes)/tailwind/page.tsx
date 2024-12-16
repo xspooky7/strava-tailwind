@@ -2,11 +2,11 @@ import { TailwindTable } from "./data-table"
 import { columns } from "./columns"
 import { DataTableSkeleton } from "../table-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
-import { checkAuth } from "@/auth/actions"
 import { Suspense } from "react"
+import { verifySession } from "@/app/lib/auth/actions"
 
 export default async function TailwindPage() {
-  const session = await checkAuth()
+  const session = await verifySession()
   let statusMessage = ""
   const startTime = performance.now()
 

@@ -2,20 +2,13 @@ import { DataTableSkeleton } from "../../table-components/table-skeleton"
 import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
 import { TableSegment } from "../../../../../../types"
-import { unstable_cache } from "next/cache"
-import { checkAuth } from "@/auth/actions"
-import { getTotalSegments } from "@/data-access/segments"
+import { getTotalSegments } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
-
-const getCachedTotalData = unstable_cache(async (session) => getTotalSegments(session), ["total"], {
-  revalidate: 600,
-  tags: ["total"],
-})
+import { verifySession } from "@/app/lib/auth/actions"
 
 const KomTotalPage = async () => {
-  const session = await checkAuth()
-  console.log("PAGE")
-  const data: Promise<TableSegment[]> = getCachedTotalData(session)
+  const session = await verifySession()
+  const data: Promise<TableSegment[]> = getTotalSegments(session)
 
   return (
     <div className="container mx-auto py-5 md:px-4">

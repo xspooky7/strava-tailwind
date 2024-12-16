@@ -6,17 +6,23 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { CrownIcon } from "lucide-react"
 import { Breadcrumbs } from "../../../components/breadcrumbs"
 import { cookies } from "next/headers"
-import { getCachedKomCount } from "@/data-access/segments"
-import { checkAuth } from "@/auth/actions"
+import { verifySession } from "@/app/lib/auth/actions"
+import { getKomCount } from "@/app/lib/data-access/segments"
 
-const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  const { isLoggedIn, pbAuth } = await checkAuth()
-  const timeSeriesPromise = await getCachedKomCount(isLoggedIn, pbAuth!)
+export const getSidebarState = async () => {
   const cookieStore = await cookies()
   const sidebarOpen = cookieStore.get("sidebar:state")?.value ?? "true"
 
+  return sidebarOpen === "true"
+}
+
+const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, pbAuth } = await verifySession()
+  const sidebarIsOpen = await getSidebarState()
+  const komTimeSeries = await getKomCount(isLoggedIn, pbAuth!)
+
   return (
-    <SidebarProvider defaultOpen={sidebarOpen === "true"}>
+    <SidebarProvider defaultOpen={sidebarIsOpen}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex px-4 h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -35,7 +41,8 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
           <div className="flex space-x-2">
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
-              <span>{timeSeriesPromise.amount}</span>
+
+              <span>{komTimeSeries.amount}</span>
             </div>
             <ThemeToggle />
           </div>

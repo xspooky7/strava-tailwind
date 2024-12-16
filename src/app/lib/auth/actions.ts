@@ -2,33 +2,23 @@
 
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { Collections } from "../../pocketbase-types"
-import pb from "@/lib/pocketbase"
+import pb from "@/app/lib/pocketbase"
 import { getIronSession } from "iron-session"
-import { defaultSession, SessionData, sessionOptions } from "./lib"
+import { SessionData, sessionOptions } from "./lib"
 import { cache } from "react"
+import { Collections } from "../../../../pocketbase-types"
 
-export const getSession = cache(async () => {
-  console.log("session")
+export const verifySession = cache(async () => {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-
-  if (!session.isLoggedIn) {
-    session.isLoggedIn = defaultSession.isLoggedIn
+  if (!session?.isLoggedIn) {
+    redirect("/")
   }
 
-  // TODO Validation goes here
-
-  return session
+  return session //{ isAuth: true, userId: session.userId, pbAuth: session.pbAuth }
 })
 
-export const checkAuth = async () => {
-  console.log("CHECK AUTH")
-  const session = await getSession()
-  if (!session.isLoggedIn) redirect("/")
-  else return session
-}
 export const login = async (prevState: { error: null | boolean }, formData: FormData) => {
-  const session = await getSession()
+  const session = await verifySession()
 
   let redirectPath: string | null = null
 
@@ -53,7 +43,7 @@ export const login = async (prevState: { error: null | boolean }, formData: Form
   if (redirectPath) redirect(redirectPath)
 }
 export const logout = async () => {
-  const session = await getSession()
+  const session = await verifySession()
   session.destroy()
   redirect("/")
 }

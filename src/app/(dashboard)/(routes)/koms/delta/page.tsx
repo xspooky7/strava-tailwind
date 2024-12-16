@@ -1,19 +1,13 @@
 import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
-import { unstable_cache } from "next/cache"
-import { checkAuth } from "@/auth/actions"
-import { getDeltaSegments } from "@/data-access/segments"
+import { getDeltaSegments } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
 import { DataTableSkeleton } from "../../table-components/table-skeleton"
-
-const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"], {
-  revalidate: 600,
-  tags: ["delta"],
-})
+import { verifySession } from "@/app/lib/auth/actions"
 
 export default async function DeltaKomPage() {
-  const session = await checkAuth()
-  const data = getCachedDeltaSegments(session)
+  const session = await verifySession()
+  const data = getDeltaSegments(session)
 
   return (
     <div className="container mx-auto py-5 md:px-4">

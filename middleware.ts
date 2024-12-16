@@ -1,32 +1,20 @@
+import { SessionData, sessionOptions } from "@/app/lib/auth/lib"
+import { getIronSession } from "iron-session"
+import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
-import { isTokenExpired } from "pocketbase"
-
-// 1. Specify protected and public routes
-const publicRoutes = ["/login", "/signup", "/"]
 
 export default async function middleware(req: NextRequest) {
-  // 2. Check if the current route is protected or public
-  const path = req.nextUrl.pathname
-  const isPublicRoute = publicRoutes.includes(path)
-  const isProtectedRoute = !isPublicRoute
+  const protectedRoutes = ["/dashboard", "/koms", "/koms/delta", "/koms/total", "/tailwind"]
+  const currentPath = req.nextUrl.pathname
+  const isProtectedRoute = protectedRoutes.includes(currentPath)
+  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
 
-  // 3. Decrypt the session from the cookie
-  const authCookie = req.cookies.get("pb_auth")
-  const token = authCookie?.value ? JSON.parse(authCookie.value).token : null
-
-  // 4. Redirect to /login if the user is not authenticated
-  if ((isProtectedRoute && !token) || isTokenExpired(token)) {
+  if (isProtectedRoute && !session?.isLoggedIn) {
     return NextResponse.redirect(new URL("/", req.nextUrl))
-  }
-
-  // 5. Redirect to /dashboard if the user is authenticated
-  else if (isPublicRoute && token && !req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl))
   }
 
   return NextResponse.next()
 }
-
 // Routes Middleware should not run on
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],

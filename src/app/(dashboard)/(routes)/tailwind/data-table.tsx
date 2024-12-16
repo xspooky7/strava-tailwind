@@ -20,7 +20,7 @@ import { TablePagination } from "../table-components/table-pagination"
 import { TableToolbar } from "../table-components/table-toolbar"
 import { TailwindSegment } from "../../../../../types"
 import { RowActions } from "./row-action"
-import { toggleStarEffort } from "@/data-access/segments"
+import { toggleStarEffort } from "@/app/lib/data-access/segments"
 import { revalidateTag } from "next/cache"
 
 interface DataTableProps {
