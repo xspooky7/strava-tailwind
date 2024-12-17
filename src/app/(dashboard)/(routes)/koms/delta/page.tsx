@@ -6,8 +6,8 @@ import { DataTableSkeleton } from "../../table-components/table-skeleton"
 import { verifySession } from "@/app/lib/auth/actions"
 
 export default async function DeltaKomPage() {
-  const session = await verifySession()
-  const data = getDeltaSegments(session)
+  const { isLoggedIn, pbAuth, userId } = await verifySession()
+  const data = getDeltaSegments(isLoggedIn, pbAuth, userId)
 
   return (
     <div className="container mx-auto py-5 md:px-4">

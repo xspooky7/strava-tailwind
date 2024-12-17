@@ -38,13 +38,13 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
   return sanatizeSegment({ ...detailedSegment, labels: getLabel(detailedSegment) })
 }
 
-export const getDeltaSegments = async (session: SessionData): Promise<TableSegment[]> => {
+export const getDeltaSegments = async (isLoggedIn: boolean, pbAuth?: string, userId?: string): Promise<TableSegment[]> => {
   "use cache"
   cacheLife("hours")
   cacheTag("delta")
-  if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
+  if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
 
-  pb.authStore.save(session.pbAuth)
+  pb.authStore.save(pbAuth)
   const data = await pb.collection(Collections.KomEfforts).getFullList({
     filter: "(gained_at != null || lost_at != null)",
     expand: "segment",
@@ -217,5 +217,5 @@ export const toggleStarEffort = async (segment_id: number, status: boolean) => {
 }
 
 export async function revalidate(tag: string) {
-  revalidatePath("/koms/delta")
+  console.log("revalidate " + tag)
 }

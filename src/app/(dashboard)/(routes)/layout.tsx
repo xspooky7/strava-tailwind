@@ -17,12 +17,12 @@ export const getSidebarState = async () => {
 }
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  const { isLoggedIn, pbAuth } = await verifySession()
-  const sidebarIsOpen = await getSidebarState()
-  const komTimeSeries = await getKomCount(isLoggedIn, pbAuth!)
+  //const { isLoggedIn, pbAuth } = await verifySession()
+  //const sidebarIsOpen = await getSidebarState()
+  //const komTimeSeries = await getKomCount(isLoggedIn, pbAuth!)
 
   return (
-    <SidebarProvider defaultOpen={sidebarIsOpen}>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex px-4 h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -42,7 +42,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
 
-              <span>{komTimeSeries.amount}</span>
+              <span>0</span>
             </div>
             <ThemeToggle />
           </div>

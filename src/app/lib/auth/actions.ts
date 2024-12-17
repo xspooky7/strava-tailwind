@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import pb from "@/app/lib/pocketbase"
 import { getIronSession } from "iron-session"
-import { SessionData, sessionOptions } from "./lib"
+import { defaultSession, SessionData, sessionOptions } from "./lib"
 import { cache } from "react"
 import { Collections } from "../../../../pocketbase-types"
 
@@ -18,8 +18,8 @@ export const verifySession = cache(async () => {
 })
 
 export const login = async (prevState: { error: null | boolean }, formData: FormData) => {
-  const session = await verifySession()
-
+  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
+  
   let redirectPath: string | null = null
 
   const username = formData.get("username") as string
