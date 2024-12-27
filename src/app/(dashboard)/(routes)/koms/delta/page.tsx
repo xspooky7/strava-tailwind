@@ -4,10 +4,13 @@ import { getDeltaSegments } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
 import { DataTableSkeleton } from "../../table-components/table-skeleton"
 import { verifySession } from "@/app/lib/auth/actions"
+import { unstable_cache } from "next/cache"
+
+const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"])
 
 export default async function DeltaKomPage() {
-  const { isLoggedIn, pbAuth, userId } = await verifySession()
-  const data = getDeltaSegments(isLoggedIn, pbAuth, userId)
+  const session = await verifySession()
+  const data = getCachedDeltaSegments(session)
 
   return (
     <div className="container mx-auto py-5 md:px-4">

@@ -6,23 +6,26 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { CrownIcon } from "lucide-react"
 import { Breadcrumbs } from "../../../components/breadcrumbs"
 import { cookies } from "next/headers"
-import { verifySession } from "@/app/lib/auth/actions"
 import { getKomCount } from "@/app/lib/data-access/segments"
+import { Suspense } from "react"
+import { TotalKomCount } from "@/components/total-kom-count"
+import { unstable_cache } from "next/cache"
 
-export const getSidebarState = async () => {
+const getSidebarState = async () => {
   const cookieStore = await cookies()
   const sidebarOpen = cookieStore.get("sidebar:state")?.value ?? "true"
 
   return sidebarOpen === "true"
 }
 
+const getCachedKomCount = unstable_cache(async () => getKomCount(), ["count"])
+
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
-  //const { isLoggedIn, pbAuth } = await verifySession()
-  //const sidebarIsOpen = await getSidebarState()
-  //const komTimeSeries = await getKomCount(isLoggedIn, pbAuth!)
+  const sidebarIsOpen = await getSidebarState()
+  const komTimeSeries = getCachedKomCount()
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={sidebarIsOpen}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex px-4 h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -41,8 +44,9 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
           <div className="flex space-x-2">
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
-
-              <span>0</span>
+              <Suspense fallback={<span>0</span>}>
+                <TotalKomCount timeSeriesPromise={komTimeSeries} />
+              </Suspense>
             </div>
             <ThemeToggle />
           </div>

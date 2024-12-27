@@ -1,5 +1,3 @@
-import { KomEffortRecord, SegmentRecord } from "./pocketbase-types"
-
 export interface Line {
   start: Coordinate
   end: Coordinate

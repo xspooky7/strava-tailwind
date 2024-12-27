@@ -9,6 +9,7 @@ import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
 import { SessionData } from "../auth/lib"
 import { verifySession } from "../auth/actions"
+import { cache } from "react"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -32,14 +33,10 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
   return sanatizeSegment({ ...detailedSegment, labels: getLabel(detailedSegment) })
 }
 
-export const getDeltaSegments = async (
-  isLoggedIn: boolean,
-  pbAuth?: string,
-  userId?: string
-): Promise<TableSegment[]> => {
-  if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
+export const getDeltaSegments = async (session: SessionData): Promise<TableSegment[]> => {
+  if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
-  pb.authStore.save(pbAuth)
+  pb.authStore.save(session.pbAuth)
   const data = await pb.collection(Collections.KomEfforts).getFullList({
     filter: "(gained_at != null || lost_at != null)",
     expand: "segment",
@@ -108,7 +105,8 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
   return Promise.all(recordIds.map((id) => pb.collection(Collections.KomEfforts).update(id, { is_starred: false })))
 }
 
-export const getKomCount = async (isLoggedIn: boolean, pbAuth: string): Promise<KomTimeseriesRecord> => {
+export const getKomCount = async (): Promise<KomTimeseriesRecord> => {
+  const { isLoggedIn, pbAuth } = await verifySession()
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(pbAuth!)
 

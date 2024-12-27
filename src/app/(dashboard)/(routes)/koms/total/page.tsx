@@ -5,10 +5,13 @@ import { TableSegment } from "../../../../../../types"
 import { getTotalSegments } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
 import { verifySession } from "@/app/lib/auth/actions"
+import { unstable_cache } from "next/cache"
+
+const getCachedDeltaSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"])
 
 const KomTotalPage = async () => {
   const session = await verifySession()
-  const data: Promise<TableSegment[]> = getTotalSegments(session)
+  const data: Promise<TableSegment[]> = getCachedDeltaSegments(session)
 
   return (
     <div className="container mx-auto py-5 md:px-4">
