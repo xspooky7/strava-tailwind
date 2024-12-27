@@ -1,11 +1,5 @@
 "use server"
 
-import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
-  revalidatePath,
-  revalidateTag,
-} from "next/cache"
 import pb from "@/app/lib/pocketbase"
 import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
 import { TableSegment } from "../../../../types"
@@ -38,10 +32,11 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
   return sanatizeSegment({ ...detailedSegment, labels: getLabel(detailedSegment) })
 }
 
-export const getDeltaSegments = async (isLoggedIn: boolean, pbAuth?: string, userId?: string): Promise<TableSegment[]> => {
-  "use cache"
-  cacheLife("hours")
-  cacheTag("delta")
+export const getDeltaSegments = async (
+  isLoggedIn: boolean,
+  pbAuth?: string,
+  userId?: string
+): Promise<TableSegment[]> => {
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(pbAuth)
@@ -65,10 +60,6 @@ export const getDeltaSegments = async (isLoggedIn: boolean, pbAuth?: string, use
 }
 
 export const getTotalSegments = async (session: SessionData): Promise<TableSegment[]> => {
-  "use cache"
-  cacheLife("hours")
-  cacheTag("total")
-
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
   console.log("GETTOTAL")
   pb.authStore.save(session.pbAuth)
@@ -118,8 +109,6 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
 }
 
 export const getKomCount = async (isLoggedIn: boolean, pbAuth: string): Promise<KomTimeseriesRecord> => {
-  "use cache"
-  cacheLife("hours")
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(pbAuth!)
 

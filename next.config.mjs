@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    dynamicIO: true,
-  },
   images: {
     domains: ["d3o5xota0a1fcr.cloudfront.net"],
   },

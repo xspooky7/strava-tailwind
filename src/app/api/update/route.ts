@@ -87,6 +87,8 @@ export async function GET(req: Request) {
       apiIds = apiIds.union(apiResults.reduce((acc, curr) => acc.union(curr), new Set()))
     }
 
+    if (ownedKomIds.size - apiIds.size > 150) return errorResponse("Can't account for complete Kom List", 510)
+
     log("[API] Success")
 
     if (ownedKomIds.symmetricDifference(apiIds).size !== 0) {
@@ -287,12 +289,11 @@ const log = (message: string, newline = true, payload?: object) => {
   DEBUG_LOG += `${message}${newline ? "\n" : ""}`
 }
 
-const errorResponse = (message: string, status = 400, error: any, ...params: any[]) => {
+const errorResponse = (message: string, status = 400, error?: any, ...params: any[]) => {
   return new NextResponse(
-    `[ERROR ${status}] ${message} \n\n -ERROR: ${JSON.stringify(
-      error,
-      Object.getOwnPropertyNames(error)
-    )} \n\n -LOG: ${DEBUG_LOG}  \n\n -PARAMS: ${JSON.stringify(params)}`,
+    `[ERROR ${status}] ${message} \n\n -ERROR: ${
+      error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : "-"
+    } \n\n -LOG: ${DEBUG_LOG}  \n\n -PARAMS: ${JSON.stringify(params)}`,
     {
       status: status,
     }
