@@ -23,7 +23,7 @@ const getCachedKomCount = unstable_cache(async (session) => getKomCount(session)
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const sidebarIsOpen = await getSidebarState()
-  const session = verifySession()
+  const session = await verifySession()
   const komTimeSeries = getCachedKomCount(session)
 
   return (

@@ -107,7 +107,7 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
 export const getKomCount = async (session: SessionData): Promise<KomTimeseriesRecord> => {
   const { isLoggedIn, pbAuth } = session
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
-  pb.authStore.save(pbAuth!)
+  pb.authStore.save(pbAuth)
 
   const timeseriesRecordPromise: Promise<KomTimeseriesRecord> = pb
     .collection(Collections.KomTimeseries)
