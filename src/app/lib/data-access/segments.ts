@@ -9,7 +9,6 @@ import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
 import { SessionData } from "../auth/lib"
 import { verifySession } from "../auth/actions"
-import { cache } from "react"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -105,8 +104,8 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
   return Promise.all(recordIds.map((id) => pb.collection(Collections.KomEfforts).update(id, { is_starred: false })))
 }
 
-export const getKomCount = async (): Promise<KomTimeseriesRecord> => {
-  const { isLoggedIn, pbAuth } = await verifySession()
+export const getKomCount = async (session: SessionData): Promise<KomTimeseriesRecord> => {
+  const { isLoggedIn, pbAuth } = session
   if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(pbAuth!)
 

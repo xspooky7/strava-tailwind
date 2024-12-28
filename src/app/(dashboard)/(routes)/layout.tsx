@@ -10,6 +10,7 @@ import { getKomCount } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
 import { TotalKomCount } from "@/components/total-kom-count"
 import { unstable_cache } from "next/cache"
+import { verifySession } from "@/app/lib/auth/actions"
 
 const getSidebarState = async () => {
   const cookieStore = await cookies()
@@ -18,11 +19,12 @@ const getSidebarState = async () => {
   return sidebarOpen === "true"
 }
 
-const getCachedKomCount = unstable_cache(async () => getKomCount(), ["count"])
+const getCachedKomCount = unstable_cache(async (session) => getKomCount(session), ["count"])
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const sidebarIsOpen = await getSidebarState()
-  const komTimeSeries = getCachedKomCount()
+  const session = verifySession()
+  const komTimeSeries = getCachedKomCount(session)
 
   return (
     <SidebarProvider defaultOpen={sidebarIsOpen}>
