@@ -9,6 +9,7 @@ import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
 import { SessionData } from "../auth/lib"
 import { verifySession } from "../auth/actions"
+import { revalidatePath } from "next/cache"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -203,5 +204,6 @@ export const toggleStarEffort = async (segment_id: number, status: boolean) => {
 }
 
 export async function revalidate(tag: string) {
+  revalidatePath("/koms/" + tag)
   console.log("revalidate " + tag)
 }
