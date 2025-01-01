@@ -201,15 +201,26 @@ const fetchWeather = unstable_cache(
         aggregateDistance = 0
 
       for (let i = 0; i < path.length; i++) {
-        aggregateDistance += path[i].distance
         const line: Line = path[i]
-        const angleDifference = Math.abs(line.bearing - meteoResults[line.clusterId!].current.windDirection10m)
+        aggregateDistance += line.distance
 
-        if (angleDifference <= 45) {
+        // Handle circular degree calculation
+        const rawAngleDiff = line.bearing - meteoResults[line.clusterId!].current.windDirection10m
+        const angleDifference = Math.min(360 - Math.abs(rawAngleDiff), Math.abs(rawAngleDiff))
+
+        // Calculate the wind component (using cosine for more accurate tailwind speed)
+        const windSpeed = meteoResults[line.clusterId!].current.windSpeed10m
+        //const angleRadians = (angleDifference * Math.PI) / 180
+        //const tailwindComponent = Math.cos(angleRadians) * windSpeed
+
+        if (angleDifference >= 135) {
           tailAbs += line.distance
-          aggregateWindspeed += line.distance * meteoResults[line.clusterId!].current.windSpeed10m
-        } else if (angleDifference <= 135) crossAbs += line.distance
-        else headAbs += line.distance
+          aggregateWindspeed += line.distance * windSpeed
+        } else if (angleDifference >= 45) {
+          crossAbs += line.distance
+        } else {
+          headAbs += line.distance
+        }
 
         line.windDirection = angleDifference
       }
