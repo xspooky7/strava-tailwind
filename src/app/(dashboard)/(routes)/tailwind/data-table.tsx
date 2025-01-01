@@ -25,10 +25,21 @@ import { revalidateTag } from "next/cache"
 
 interface DataTableProps {
   columns: ColumnDef<TailwindSegment>[]
-  promises: Promise<any>
+  awaitedPromises: any
 }
 
-export function TailwindTable({ columns, promises }: DataTableProps) {
+export const TailwindTable = ({
+  columns,
+  promises,
+}: {
+  promises: Promise<any>
+  columns: ColumnDef<TailwindSegment>[]
+}) => {
+  const data = React.use(promises)
+  return <TailwindTableUse columns={columns} awaitedPromises={data} />
+}
+
+function TailwindTableUse({ columns, awaitedPromises }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -40,12 +51,11 @@ export function TailwindTable({ columns, promises }: DataTableProps) {
   ])
 
   const [data, setData] = React.useState<TailwindSegment[]>([])
+
   React.useEffect(() => {
-    promises.then((res) => {
-      console.log(res.meteoRequestCount)
-      setData(res.segments)
-    })
-  }, [promises])
+    console.log(awaitedPromises.meteoRequestCount)
+    setData(awaitedPromises.segments)
+  }, [])
 
   const handleUnstar = (id: number) => {
     toggleStarEffort(id, true)
