@@ -7,10 +7,14 @@ import {
   getStarredSegments,
   processNewSegments,
 } from "@/app/lib/data-access/segments"
-import { TailwindSegment } from "../../../../../types"
+import { Coordinate, Line, TailwindSegment, WeatherResponse } from "../../../../../types"
 import { RecordModel } from "pocketbase"
 import { fetchStarredPage, getStravaToken } from "@/app/lib/data-access/strava"
-import { verifySession } from "@/app/lib/auth/actions"
+import { getCenter, getDistance } from "geolib"
+import { fetchWeatherApi } from "openmeteo"
+import { unstable_cache } from "next/cache"
+import { SessionData } from "@/app/lib/auth/lib"
+import { MAX_WEATHER_QUERY_INTERVAL } from "../../../../../constants"
 
 /**
  * Gathers a detailed version of all currently starred segments
@@ -21,15 +25,14 @@ import { verifySession } from "@/app/lib/auth/actions"
  * @returns {boolean} Exeeded Strava API rates.
  */
 
-export const loadStarredSegments = async () => {
-  const session = await verifySession()
+export const loadStarredSegments = async (session: SessionData) => {
   if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(session.pbAuth)
+
   let meteoRequestCount = 0,
     stravaRequestCount = 0,
     exceededRate = false
 
-  // Fetching stored access token
   let stravaToken = ""
   try {
     const [token, _] = await getStravaToken()
@@ -37,8 +40,6 @@ export const loadStarredSegments = async () => {
   } catch (error) {
     throw new Error("[ERROR] Couldn't retrieve Strava Access Token " + JSON.stringify(asError(error)))
   }
-
-  // Fetching stored starred Kom Efforts + Segments and the first page of starred segments from strava
 
   stravaRequestCount++
   let [stravaStarredList, dbKomEffortRecords] = await Promise.all([
@@ -125,31 +126,154 @@ export const loadStarredSegments = async () => {
       })
 
     const tailwindSegments = newTailwindSegments.concat(knownSegments)
+    const paths = tailwindSegments.map((segment) => segment.path)
 
-    const [_, newStarredWeatherSegments]: [void, TailwindSegment[]] = await Promise.all([
+    const [_, weatherPaths]: [void, { res: WeatherResponse[]; apiRequestCount: number }] = await Promise.all([
       processNewSegments(newSegments),
-      Promise.all(
-        tailwindSegments.map(async (segment) => {
-          const weatherResponse = await fetch(process.env.WEATHER_API_URL!, {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-            },
-            body: JSON.stringify(segment.path),
-            next: { revalidate: 1800 },
-          })
-          const { meteoRequests, ...weatherData } = await weatherResponse.json()
-          meteoRequestCount += meteoRequests
-          return { ...segment, ...weatherData }
-        })
-      ),
+      fetchWeather(paths),
     ])
-    starredWeatherSegments = newStarredWeatherSegments
+
+    const { apiRequestCount, ...weatherData } = weatherPaths
+    meteoRequestCount += apiRequestCount
+    starredWeatherSegments = tailwindSegments.map((segment, i) => {
+      return { ...segment, ...weatherData.res[i] }
+    })
   }
+
   return {
     segments: starredWeatherSegments,
     stravaRequestCount,
     meteoRequestCount,
     exceededRate,
+  }
+}
+
+/**
+ * Fetches Weather Data for all Paths and calculates tailwind percentage
+ * Density-based clustering of lines for more efficient API usage
+ *
+ * @param {Line[][]} paths - Array of Paths. One for each starred segment
+ * @returns {WeatherResponse [], number}  - Objects holding respective weather data for the segment as well as the path
+ * and the number of requests made
+ */
+
+const fetchWeather = unstable_cache(
+  async (paths: Line[][]) => {
+    console.log("Cache miss")
+
+    let apiRequestCount = 0
+
+    const res: WeatherResponse[] = []
+    const meteoRequests: Promise<any>[] = []
+    const clusters: Coordinate[] = []
+
+    paths.forEach((path: Line[]) => {
+      for (const line of path) {
+        const midpoint = getCenter([line.start, line.end])
+        if (!midpoint) throw new Error("fucked")
+        const formattedMidpoint: Coordinate = { lat: midpoint.latitude, lon: midpoint.longitude }
+        let addedToCluster = false
+
+        for (let i = 0; i < clusters.length; i++) {
+          if (getDistance(midpoint, clusters[i]) <= MAX_WEATHER_QUERY_INTERVAL) {
+            line.clusterId = i
+            addedToCluster = true
+            break
+          }
+        }
+
+        if (!addedToCluster) {
+          clusters.push(formattedMidpoint)
+          meteoRequests.push(meteoRequest(formattedMidpoint))
+          apiRequestCount++
+          line.clusterId = clusters.length - 1
+        }
+      }
+    })
+
+    const meteoResults = await Promise.all(meteoRequests)
+
+    paths.forEach((path: Line[]) => {
+      let tailAbs = 0,
+        crossAbs = 0,
+        headAbs = 0,
+        aggregateWindspeed = 0,
+        aggregateDistance = 0
+
+      for (let i = 0; i < path.length; i++) {
+        aggregateDistance += path[i].distance
+        const line: Line = path[i]
+        const angleDifference = Math.abs(line.bearing - meteoResults[line.clusterId!].current.windDirection10m)
+
+        if (angleDifference <= 45) {
+          tailAbs += line.distance
+          aggregateWindspeed += line.distance * meteoResults[line.clusterId!].current.windSpeed10m
+        } else if (angleDifference <= 135) crossAbs += line.distance
+        else headAbs += line.distance
+
+        line.windDirection = angleDifference
+      }
+
+      const tail = (tailAbs / aggregateDistance) * 100
+      const cross = (crossAbs / aggregateDistance) * 100
+      const head = (headAbs / aggregateDistance) * 100
+      const avgTailwindSpeed = tailAbs > 0 ? aggregateWindspeed / tailAbs : 0
+
+      res.push({
+        wind: {
+          tail,
+          cross,
+          head,
+          avgTailwindSpeed,
+        },
+      })
+    })
+
+    return { res, apiRequestCount }
+  },
+  [],
+  {
+    tags: ["meteo"],
+    revalidate: 1800,
+  }
+)
+
+/**
+ * Takes a coordinate pair and queries open-meteo for weather data
+ *
+ * @param {Coordinate} coord - Coordinates for the API.
+ * @returns {Object} - Weather data by open-meteo.
+ */
+
+const meteoRequest = async (coord: Coordinate) => {
+  const params = {
+    latitude: coord.lat,
+    longitude: coord.lon,
+    current: ["temperature_2m", "weather_code", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"],
+    timezone: "Europe/Berlin",
+    forecast_days: 1,
+  }
+  const url = "https://api.open-meteo.com/v1/forecast"
+  const responses = await fetchWeatherApi(url, params)
+  const response = responses[0]
+
+  const utcOffsetSeconds = response.utcOffsetSeconds()
+  const timezone = response.timezone()
+  const timezoneAbbreviation = response.timezoneAbbreviation()
+  const latitude = response.latitude()
+  const longitude = response.longitude()
+
+  const current = response.current()!
+
+  // Note: The order of weather variables in the URL query and the indices below need to match!
+  return {
+    current: {
+      time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
+      temperature2m: current.variables(0)!.value(),
+      weatherCode: current.variables(1)!.value(),
+      windSpeed10m: current.variables(2)!.value(),
+      windDirection10m: current.variables(3)!.value(),
+      windGusts10m: current.variables(4)!.value(),
+    },
   }
 }

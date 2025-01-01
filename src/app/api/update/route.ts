@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   try {
     const headersList = await headers()
     const apiKey = headersList.get("x-api-key")
-    if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
+    //if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
 
     const userId = process.env.USER_ID!
     let exceededRate = false

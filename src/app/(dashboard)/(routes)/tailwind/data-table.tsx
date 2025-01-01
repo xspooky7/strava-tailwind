@@ -32,11 +32,19 @@ export function TailwindTable({ columns, promises }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([
+    {
+      desc: true,
+      id: "tailwind",
+    },
+  ])
 
   const [data, setData] = React.useState<TailwindSegment[]>([])
   React.useEffect(() => {
-    promises.then((res) => setData(res.segments))
+    promises.then((res) => {
+      console.log(res.meteoRequestCount)
+      setData(res.segments)
+    })
   }, [promises])
 
   const handleUnstar = (id: number) => {

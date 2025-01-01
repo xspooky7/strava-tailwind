@@ -79,26 +79,26 @@ export const columns: ColumnDef<TailwindSegment>[] = [
       )
     },
   },
+  /*
   {
     accessorKey: "profile",
     header: ({ column }) => <TableColumnHeader column={column} title="Profile" />,
     cell: ({ row }) => {
       return <Image src={row.original.profile_url!} alt="" width={112} height={32} />
     },
-  },
+  },*/
   {
-    accessorKey: "tail",
+    accessorKey: "tailwind",
     header: ({ column }) => <TableColumnHeader column={column} title="Tailwind" />,
     accessorFn: (row) => row.wind!.tail,
     cell: ({ row }) => {
-      const color = row.original.wind!.tail >= 90 ? "" : ""
       return (
         <div className="flex space-x-2 items-center">
           <WindIcon className="h-4 w-4 text-muted-foreground" />
           <span>{Math.round(row.original.wind!.avgTailwindSpeed)}km/h</span>
           <Separator orientation="vertical" className="h-4" />
-          <PercentIcon className={"h-4 w-4 text-muted-foreground" + color} />
-          <span className={"ml-3 text-primary" + color}>{Math.round(row.original.wind!.tail)}</span>
+          <PercentIcon className={"h-4 w-4 text-muted-foreground"} />
+          <span className={"ml-3 text-primary"}>{Math.round(row.original.wind!.tail)}</span>
         </div>
       )
     },

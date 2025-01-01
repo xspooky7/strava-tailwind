@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { getGreatCircleBearing, getPreciseDistance } from "geolib"
+import { getDistance, getGreatCircleBearing, getPreciseDistance } from "geolib"
 import { THRESHHOLD } from "../../../constants"
 import { Line, Label, Coordinate } from "../../../types"
 import { SegmentRecord } from "../../../pocketbase-types"
@@ -99,14 +99,15 @@ const pathCurveAmount = (path: Line[], angleThreshold = 60): number => {
 export const getPath = (polyline: string) => {
   const path: Line[] = []
   const poly = require("@mapbox/polyline")
-  const coordPairs: Coordinate[] = poly.decode(polyline)
+  const coordPairs: [number, number][] = poly.decode(polyline)
+  const formattedCoords: Coordinate[] = coordPairs.map((n) => ({ lat: n[0], lon: n[1] }))
 
   for (let i = 1; i < coordPairs.length; i++) {
     path.push({
-      start: coordPairs[i - 1],
-      end: coordPairs[i],
-      distance: getPreciseDistance(coordPairs[i - 1], coordPairs[i]),
-      bearing: getGreatCircleBearing(coordPairs[i - 1], coordPairs[i]),
+      start: formattedCoords[i - 1],
+      end: formattedCoords[i],
+      distance: getPreciseDistance(formattedCoords[i - 1], formattedCoords[i]),
+      bearing: getGreatCircleBearing(formattedCoords[i - 1], formattedCoords[i]),
     })
   }
   return path
@@ -125,7 +126,7 @@ export const sanatizeSegment = (obj: any): SegmentRecord => {
     created_at: getValue(obj.created_at),
     distance: getValue(obj.distance),
     effort_count: getValue(obj.effort_count),
-    end_latlng: getValue(obj.end_latlng),
+    end: getValue({ lat: obj.end_latlng[0], lon: obj.end_latlng[1] }),
     hazardous: getValue(obj.hazardous, false),
     labels: getValue(obj.labels),
     leader_kom: getValue(obj.xoms?.kom),
@@ -140,7 +141,7 @@ export const sanatizeSegment = (obj: any): SegmentRecord => {
     profile_url_light: getValue(obj.elevation_profiles?.light_url),
     segment_id: getValue(obj.id),
     star_count: getValue(obj.star_count),
-    start_latlng: getValue(obj.start_latlng),
+    start: getValue({ lat: obj.start_latlng[0], lon: obj.start_latlng[1] }),
     state: obj.state ? obj.state : "-",
     total_elevation_gain: getValue(obj.total_elevation_gain),
   }

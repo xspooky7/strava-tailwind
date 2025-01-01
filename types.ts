@@ -3,11 +3,14 @@ export interface Line {
   end: Coordinate
   distance: number
   bearing: number
-  weatherRef?: number
+  clusterId?: number
   windDirection?: number
 }
 
-export type Coordinate = [number, number] // Lat, Lng
+export type Coordinate = {
+  lat: number
+  lon: number
+}
 export type Label =
   | "Hazardous"
   | "Circuit"
@@ -20,14 +23,12 @@ export type Label =
   | "Uncontested"
 
 export type WeatherResponse = {
-  path: Line[]
   wind: {
     tail: number
     cross: number
     head: number
     avgTailwindSpeed: number
   }
-  meteoRequests: number
 }
 
 export interface TailwindSegment {

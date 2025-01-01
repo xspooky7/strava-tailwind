@@ -10,8 +10,8 @@ export default async function TailwindPage() {
   let statusMessage = ""
   const startTime = performance.now()
 
-  /*const promises = loadStarredSegments()
-
+  const promises = loadStarredSegments(session)
+  const maintenance = <p>Under Maintenance</p>
   const temp = (
     <div className="container mx-auto py-5 px-4">
       <Suspense
@@ -28,6 +28,6 @@ export default async function TailwindPage() {
         <TailwindTable columns={columns} promises={promises} />
       </Suspense>
     </div>
-  )*/
-  return <p>Under Maintenance</p>
+  )
+  return temp
 }

@@ -87,7 +87,7 @@ export type SegmentRecord = {
   created_at?: string
   distance: number
   effort_count?: number
-  end_latlng: Coordinate
+  end: Coordinate
   hazardous?: boolean
   labels?: Label[]
   leader_kom?: string
@@ -102,7 +102,7 @@ export type SegmentRecord = {
   profile_url_light?: string
   segment_id: number
   star_count?: number
-  start_latlng: Coordinate
+  start: Coordinate
   state: string
   total_elevation_gain?: number
 }
