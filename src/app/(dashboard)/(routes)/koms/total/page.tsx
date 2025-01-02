@@ -1,4 +1,4 @@
-import { DataTableSkeleton } from "../../table-components/table-skeleton"
+import { CustomTableSkeleton } from "../../table-components/table-skeleton"
 import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
 import { TableSegment } from "../../../../../../types"
@@ -7,17 +7,17 @@ import { Suspense } from "react"
 import { verifySession } from "@/app/lib/auth/actions"
 import { unstable_cache } from "next/cache"
 
-const getCachedDeltaSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"])
+const getCachedTotalSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"])
 
 const KomTotalPage = async () => {
   const session = await verifySession()
-  const data: Promise<TableSegment[]> = getCachedDeltaSegments(session)
+  const data: Promise<TableSegment[]> = getCachedTotalSegments(session)
 
   return (
     <div className="container mx-auto py-5 md:px-4">
       <Suspense
         fallback={
-          <DataTableSkeleton
+          <CustomTableSkeleton
             columnCount={4}
             searchableColumnCount={1}
             filterableColumnCount={1}
@@ -25,7 +25,7 @@ const KomTotalPage = async () => {
           />
         }
       >
-        <KomTable promises={data} columns={columns} sort="city" />
+        <KomTable promises={data} columns={columns} sort="city" tableId="total" />
       </Suspense>
     </div>
   )

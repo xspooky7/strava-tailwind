@@ -2,7 +2,7 @@ import { KomTable } from "../../table-components/table"
 import { columns } from "./columns"
 import { getDeltaSegments } from "@/app/lib/data-access/segments"
 import { Suspense } from "react"
-import { DataTableSkeleton } from "../../table-components/table-skeleton"
+import { CustomTableSkeleton } from "../../table-components/table-skeleton"
 import { verifySession } from "@/app/lib/auth/actions"
 import { unstable_cache } from "next/cache"
 
@@ -16,7 +16,7 @@ export default async function DeltaKomPage() {
     <div className="container mx-auto py-5 md:px-4">
       <Suspense
         fallback={
-          <DataTableSkeleton
+          <CustomTableSkeleton
             columnCount={5}
             searchableColumnCount={1}
             filterableColumnCount={1}
@@ -24,7 +24,7 @@ export default async function DeltaKomPage() {
           />
         }
       >
-        <KomTable promises={data} columns={columns} sort="status" />
+        <KomTable promises={data} columns={columns} sort="status" tableId="delta" />
       </Suspense>
     </div>
   )

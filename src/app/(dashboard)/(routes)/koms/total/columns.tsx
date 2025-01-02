@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { TableColumnHeader } from "../../table-components/table-column-header"
 import { TableRowActions } from "../../table-components/table-row-action"
-import { StarIcon } from "lucide-react"
 import { TableSegment, Label } from "../../../../../../types"
 
 export const columns: ColumnDef<TableSegment>[] = [

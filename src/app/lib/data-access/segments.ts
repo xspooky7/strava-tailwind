@@ -203,7 +203,7 @@ export const toggleStarEffort = async (segment_id: number, status: boolean) => {
   }
 }
 
-export async function revalidate(tag: string) {
-  revalidatePath("/koms/" + tag)
-  console.log("revalidate " + tag)
+export async function revalidate(path: string) {
+  revalidatePath(path)
+  console.log("revalidate " + path)
 }

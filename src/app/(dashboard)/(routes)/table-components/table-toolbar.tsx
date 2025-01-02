@@ -8,13 +8,17 @@ import { TableFacetedFilter } from "./table-faceted-filter"
 import { labels } from "./metadata"
 import { RefreshCwIcon } from "lucide-react"
 import { revalidate } from "@/app/lib/data-access/segments"
+import { toast } from "sonner"
+import { usePathname } from "next/navigation"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
+  revalidateId: string
 }
 
-export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+export function TableToolbar<TData>({ table, revalidateId }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
+  const path = usePathname()
 
   return (
     <div className="flex items-center justify-between">
@@ -25,7 +29,20 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        <Button className="h-8 w-8" variant="outline" size="icon" onClick={async () => await revalidate("delta")}>
+        <Button
+          className="h-8 w-8"
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            toast.promise(revalidate(path), {
+              loading: "Loading...",
+              success: () => {
+                return "Table successfully revalidated"
+              },
+              error: "Table couldn't be revalidated",
+            })
+          }}
+        >
           <RefreshCwIcon className="h-4 w-4" />
         </Button>
         {table.getColumn("label") && (
