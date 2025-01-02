@@ -36,11 +36,24 @@ import {
 
 interface DataTableProps {
   columns: ColumnDef<TableSegment>[]
-  promises: Promise<TableSegment[]>
+  tableSegments: TableSegment[]
   sort: string
 }
 
-export function KomTable({ columns, promises, sort }: DataTableProps) {
+export const KomTable = ({
+  columns,
+  promises,
+  sort,
+}: {
+  promises: Promise<any>
+  columns: ColumnDef<TableSegment>[]
+  sort: string
+}) => {
+  const data = React.use(promises)
+  return <KomTableUse columns={columns} tableSegments={data} sort={sort} />
+}
+
+function KomTableUse({ columns, tableSegments, sort }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -50,10 +63,7 @@ export function KomTable({ columns, promises, sort }: DataTableProps) {
       id: sort,
     },
   ])
-  const [data, setData] = React.useState<TableSegment[]>([])
-  React.useEffect(() => {
-    promises.then((res) => setData(res))
-  }, [promises])
+  const [data, setData] = React.useState<TableSegment[]>(tableSegments)
 
   const handleToggleStar = (id: number, isCurrentlyStarred: boolean) => {
     toggleStarEffort(id, isCurrentlyStarred)

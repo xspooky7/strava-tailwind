@@ -50,12 +50,7 @@ function TailwindTableUse({ columns, awaitedPromises }: DataTableProps) {
     },
   ])
 
-  const [data, setData] = React.useState<TailwindSegment[]>([])
-
-  React.useEffect(() => {
-    console.log(awaitedPromises.meteoRequestCount)
-    setData(awaitedPromises.segments)
-  }, [])
+  const [data, setData] = React.useState<TailwindSegment[]>(awaitedPromises.segments)
 
   const handleUnstar = (id: number) => {
     toggleStarEffort(id, true)

@@ -22,7 +22,6 @@ const KomTotalPage = async () => {
             searchableColumnCount={1}
             filterableColumnCount={1}
             cellWidths={["4rem", "40rem", "14rem", "5rem"]}
-            shrinkZero
           />
         }
       >

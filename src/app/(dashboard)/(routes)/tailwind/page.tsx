@@ -4,6 +4,7 @@ import { DataTableSkeleton } from "../table-components/table-skeleton"
 import { loadStarredSegments } from "./starred-segments"
 import { Suspense } from "react"
 import { verifySession } from "@/app/lib/auth/actions"
+import { LoaderIcon } from "lucide-react"
 
 export default async function TailwindPage() {
   const session = await verifySession()
@@ -16,13 +17,9 @@ export default async function TailwindPage() {
     <div className="container mx-auto py-5 px-4">
       <Suspense
         fallback={
-          <DataTableSkeleton
-            columnCount={6}
-            searchableColumnCount={1}
-            filterableColumnCount={2}
-            cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem", "8rem"]}
-            shrinkZero
-          />
+          <div className="flex items-center justify-center h-screen">
+            <LoaderIcon className="size-6 animate-spin text-main-foreground" />
+          </div>
         }
       >
         <TailwindTable columns={columns} promises={promises} />
