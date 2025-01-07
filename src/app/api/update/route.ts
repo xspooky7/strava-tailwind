@@ -1,10 +1,11 @@
 import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
+import { Collections, KomEffortRecord, KomGainLossRecord, SegmentRecord } from "../../../../pocketbase-types"
 import pb from "@/app/lib/pocketbase"
 import { getStravaToken } from "@/app/lib/data-access/strava"
 import { fetchNewSegmentRecord } from "@/app/lib/data-access/segments"
+import { ACTIVELY_ACQUIRED_KOM_THRESHOLD } from "../../../../constants"
 
 export const maxDuration = 60 // vercel
 
@@ -16,9 +17,11 @@ export async function GET(req: Request) {
   try {
     const headersList = await headers()
     const apiKey = headersList.get("x-api-key")
-    //if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
+    if (apiKey !== process.env.UPDATE_API_KEY) return new NextResponse("Unauthorized", { status: 401 })
 
     const userId = process.env.USER_ID!
+    const userGender = "f"
+
     let exceededRate = false
     const date = new Date()
     const currentHour = (date.getUTCHours() + 1) % 24 //CEST
@@ -97,24 +100,26 @@ export async function GET(req: Request) {
 
       const concurrentUpdates: Promise<any>[] = []
 
+      const order: { ref_id: string; segment_id: number; status: "gained" | "lost"; gender: "f" | "m" }[] = []
+
       // handles lost koms
       if (lostKomIds.size) {
         log("[INFO] Processing lost Koms")
-        lostKomIds.forEach((lostId) => {
+
+        for (const lostId of lostKomIds) {
           const storedEffort = userEfforts.find((effort) => effort.segment_id === lostId)
           if (storedEffort == null || storedEffort.id == null)
             return errorResponse("Couldn't resolve lost effort, which was expected", 512, { id: lostId })
-          const timeline = storedEffort.lost_at ? storedEffort.lost_at : []
           log(
             `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
           )
+
           concurrentUpdates.push(
             pb
               .collection(Collections.KomEfforts)
               .update(
                 storedEffort.id,
                 {
-                  lost_at: timeline.concat(now),
                   has_kom: false,
                 },
                 { cache: "no-store" }
@@ -131,7 +136,25 @@ export async function GET(req: Request) {
                 )
               })
           )
-        })
+
+          const lossRecord: KomGainLossRecord = {
+            user: userId,
+            segment_id: lostId,
+            kom_effort: storedEffort.id,
+            status: "lost",
+          }
+
+          let lossRecordRef
+
+          try {
+            lossRecordRef = await pb.collection(Collections.KomGainLoss).create(lossRecord)
+          } catch (error) {
+            return errorResponse(`Error occured while creating a Loss Record (seg_id:${lostId})`, 513, error)
+          }
+          log(`[DATABASE] Succesfully created a Loss Record (seg_id:${lostId})`)
+
+          order.push({ ref_id: lossRecordRef.id, segment_id: lostId, status: "lost", gender: userGender })
+        }
       }
 
       //handles gained koms
@@ -139,9 +162,7 @@ export async function GET(req: Request) {
         log("[INFO] Processing gained Koms")
         for (const gainedId of gainedKomIds) {
           const storedEffort = userEfforts.find((effort) => effort.segment_id === gainedId)
-          if (storedEffort) {
-            const timeline = storedEffort.gained_at ? storedEffort.gained_at : []
-
+          if (!(storedEffort == null || storedEffort.id == null)) {
             log(
               `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
             )
@@ -151,7 +172,6 @@ export async function GET(req: Request) {
                 .update(
                   storedEffort.id!,
                   {
-                    gained_at: timeline.concat(now),
                     has_kom: true,
                   },
                   { cache: "no-store" }
@@ -168,9 +188,31 @@ export async function GET(req: Request) {
                   )
                 })
             )
+            const gainRecord: KomGainLossRecord = {
+              user: userId,
+              segment_id: gainedId,
+              kom_effort: storedEffort.id,
+              status: "gained_active",
+            }
+
+            let gainRecordRef
+
+            try {
+              gainRecordRef = await pb.collection(Collections.KomGainLoss).create(gainRecord)
+            } catch (error) {
+              return errorResponse(
+                `Error occured while creating an active Gain Record (seg_id:${gainedId})`,
+                513,
+                error
+              )
+            }
+            log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${gainedId})`)
+
+            order.push({ ref_id: gainRecordRef.id, segment_id: gainedId, status: "gained", gender: userGender })
           } else {
             let seg_ref,
               segment: SegmentRecord | null = null
+            let active = true
             try {
               log(`[DATABASE] Trying to fetch Segment (seg_id: ${gainedId})`)
               seg_ref = await pb.collection(Collections.Segments).getFirstListItem(`segment_id="${gainedId}"`)
@@ -198,6 +240,8 @@ export async function GET(req: Request) {
               }
             }
 
+            active = new Date().getTime() - new Date(seg_ref.created_at!).getTime() > ACTIVELY_ACQUIRED_KOM_THRESHOLD
+
             log(`[DATABASE] Creating Kom Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
             const newEffort: KomEffortRecord = {
               segment: seg_ref.id!,
@@ -205,45 +249,73 @@ export async function GET(req: Request) {
               segment_id: seg_ref.segment_id,
               is_starred: false,
               has_kom: true,
-              gained_at: [now],
             }
-            concurrentUpdates.push(
-              pb
-                .collection(Collections.KomEfforts)
-                .create(newEffort)
-                .then(() => log(`[DATABASE] Succesfully created a new Kom Effort Record (seg_id: ${gainedId})`))
-                .catch((error) => {
-                  return errorResponse(
-                    `Error occured while creating a new Kom Effort on the database (seg_id: ${gainedId})`,
-                    517,
-                    error,
-                    gainedId
-                  )
-                })
-            )
+            let newKomEffort: KomEffortRecord
+            try {
+              newKomEffort = await pb.collection(Collections.KomEfforts).create(newEffort)
+              log(`[DATABASE] Succesfully created a new Kom Effort Record (seg_id: ${gainedId})`)
+            } catch (error) {
+              return errorResponse(
+                `Error occured while creating a new Kom Effort on the database (seg_id: ${gainedId})`,
+                517,
+                error,
+                gainedId
+              )
+            }
+
+            const gainRecord: KomGainLossRecord = {
+              user: userId,
+              segment_id: seg_ref.segment_id,
+              kom_effort: newKomEffort.id,
+              status: active ? "gained_active" : "gained_passive",
+            }
+
+            let gainRecordRef
+            try {
+              gainRecordRef = await pb.collection(Collections.KomGainLoss).create(gainRecord)
+            } catch (error) {
+              return errorResponse(
+                `Error occured while creating an active Gain Record (seg_id:${seg_ref.segment_id})`,
+                513,
+                error
+              )
+            }
+            log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${seg_ref.segment_id})`)
+
+            order.push({
+              ref_id: gainRecordRef.id,
+              segment_id: seg_ref.segment_id,
+              status: "gained",
+              gender: userGender,
+            })
           }
         }
       }
 
       const amount = ownedKomIds.size + gainedKomIds.size - lostKomIds.size
-      const dateString = date.toISOString()
-      const newTimeseries: KomTimeseriesRecord = {
-        user: userId,
-        date: dateString,
-        amount,
-      }
+
       concurrentUpdates.push(
         pb
-          .collection(Collections.KomTimeseries)
-          .create(newTimeseries, { cache: "no-store" })
-          .then((timeSeries) => {
-            log(`[DATABASE] Updated Timeseries: ${timeSeries.amount} - ${timeSeries.date}`)
+          .collection(Collections.Users)
+          .update(userId, { kom_count: amount })
+          .then((userRecord) => {
+            log(`[DATABASE] Updated User ${userId}: ${userRecord.kom_count} total Koms`)
           })
           .catch(() => {
-            log(`[WARNING] Failed to update timeseries`)
+            log(`[WARNING] Failed to update User Kom Count`)
           })
       )
       await Promise.all(concurrentUpdates)
+      console.log(order)
+
+      fetch("http://localhost:8080/service", {
+        method: "POST",
+        headers: {
+          "x-api-key": process.env.UPDATE_API_KEY!,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(order),
+      })
     } else {
       log(`[INFO] Sets are identical (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
     }
@@ -282,6 +354,8 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
   }
   throw new Error(`503 error on fetching page ${page} after ${retries} retries.`)
 }
+
+const fetchAdditionalData = () => {}
 
 //Helper
 const log = (message: string, newline = true, payload?: object) => {

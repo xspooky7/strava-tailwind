@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { getDistance, getGreatCircleBearing, getPreciseDistance } from "geolib"
-import { THRESHHOLD } from "../../../constants"
+import { THRESHOLD } from "../../../constants"
 import { Line, Label, Coordinate } from "../../../types"
 import { SegmentRecord } from "../../../pocketbase-types"
 
@@ -28,7 +28,7 @@ export const asError = (thrown: unknown): Error => {
 export const getLabel = (segment: any): Label[] => {
   const classification: Label[] = []
   if (segment.hazardous) classification.push("Hazardous")
-  if (getPreciseDistance(segment.start_latlng, segment.end_latlng) <= THRESHHOLD.CIRCUIT) classification.push("Circuit")
+  if (getPreciseDistance(segment.start_latlng, segment.end_latlng) <= THRESHOLD.CIRCUIT) classification.push("Circuit")
   const { path } = segment
   let aggregateDistance = path[0].distance
   let maxBearingChange = 0
@@ -45,20 +45,20 @@ export const getLabel = (segment: any): Label[] => {
   }
   //const averageBearingChange = weightedBearingChange / aggregateDistance
   const curveAmount = pathCurveAmount(segment.path)
-  if (curveAmount >= 3 && curveAmount / aggregateDistance > THRESHHOLD.CURVY / 1000) {
+  if (curveAmount >= 3 && curveAmount / aggregateDistance > THRESHOLD.CURVY / 1000) {
     classification.push("Curvy")
-  } else if (maxBearingChange < THRESHHOLD.STRAIGHT) {
+  } else if (maxBearingChange < THRESHOLD.STRAIGHT) {
     classification.push("Straight")
   }
   const date = new Date(segment.created_at)
   const now = new Date()
   const diffInMs = now.getTime() - date.getTime()
   const daysSinceCreation = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-  if (segment.effort_count / daysSinceCreation <= THRESHHOLD.UNCONTESTET) classification.push("Uncontested")
-  else if (segment.effort_count >= THRESHHOLD.CONTESTET) classification.push("Contested")
-  if (segment.average_grade > THRESHHOLD.CLIMB) classification.push("Climb")
-  else if (segment.average_grade < THRESHHOLD.DOWNHILL) classification.push("Downhill")
-  if (segment.distance > THRESHHOLD.OVERLONG) classification.push("Overlong")
+  if (segment.effort_count / daysSinceCreation <= THRESHOLD.UNCONTESTET) classification.push("Uncontested")
+  else if (segment.effort_count >= THRESHOLD.CONTESTET) classification.push("Contested")
+  if (segment.average_grade > THRESHOLD.CLIMB) classification.push("Climb")
+  else if (segment.average_grade < THRESHOLD.DOWNHILL) classification.push("Downhill")
+  if (segment.distance > THRESHOLD.OVERLONG) classification.push("Overlong")
   return classification
 }
 

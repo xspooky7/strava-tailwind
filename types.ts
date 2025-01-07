@@ -23,12 +23,10 @@ export type Label =
   | "Uncontested"
 
 export type WeatherResponse = {
-  wind: {
-    tail: number
-    cross: number
-    head: number
-    avgTailwindSpeed: number
-  }
+  tail: number
+  cross: number
+  head: number
+  avgTailwindSpeed: number
 }
 
 export interface TailwindSegment {
@@ -43,12 +41,7 @@ export interface TailwindSegment {
   leader_qom?: string | null
   labels?: Label[]
   path: Line[]
-  wind?: {
-    tail: number
-    cross: number
-    head: number
-    avgTailwindSpeed: number
-  }
+  wind?: WeatherResponse
 }
 
 export interface TableSegment {
@@ -56,10 +49,10 @@ export interface TableSegment {
   name: string
   city: string
   labels: Label[]
-  lost_at?: number[]
-  gained_at?: number[]
   has_kom: boolean
   is_starred: boolean
+  status?: "gained_active" | "gained_passive" | "lost"
+  created?: Date
 }
 
 /*

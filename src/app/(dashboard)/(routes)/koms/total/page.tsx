@@ -25,7 +25,7 @@ const KomTotalPage = async () => {
           />
         }
       >
-        <KomTable promises={data} columns={columns} sort="city" tableId="total" />
+        <KomTable promises={data} columns={columns} sort="city" />
       </Suspense>
     </div>
   )

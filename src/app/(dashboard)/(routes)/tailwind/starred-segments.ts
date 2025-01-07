@@ -136,7 +136,7 @@ export const loadStarredSegments = async (session: SessionData) => {
     const { apiRequestCount, ...weatherData } = weatherPaths
     meteoRequestCount += apiRequestCount
     starredWeatherSegments = tailwindSegments.map((segment, i) => {
-      return { ...segment, ...weatherData.res[i] }
+      return { ...segment, wind: weatherData.res[i] }
     })
   }
 
@@ -231,12 +231,10 @@ const fetchWeather = unstable_cache(
       const avgTailwindSpeed = tailAbs > 0 ? aggregateWindspeed / tailAbs : 0
 
       res.push({
-        wind: {
-          tail,
-          cross,
-          head,
-          avgTailwindSpeed,
-        },
+        tail,
+        cross,
+        head,
+        avgTailwindSpeed,
       })
     })
 

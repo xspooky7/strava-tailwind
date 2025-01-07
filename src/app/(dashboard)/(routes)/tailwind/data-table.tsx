@@ -110,7 +110,7 @@ function TailwindTableUse({ columns, awaitedPromises }: DataTableProps) {
 
   return (
     <div className="space-y-4">
-      <TableToolbar table={table} revalidateId="" />
+      <TableToolbar table={table} />
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>

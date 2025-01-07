@@ -1,7 +1,13 @@
 "use server"
 
 import pb from "@/app/lib/pocketbase"
-import { Collections, KomEffortRecord, KomTimeseriesRecord, SegmentRecord } from "../../../../pocketbase-types"
+import {
+  Collections,
+  KomEffortRecord,
+  KomTimeseriesRecord,
+  SegmentRecord,
+  UserRecord,
+} from "../../../../pocketbase-types"
 import { TableSegment } from "../../../../types"
 import { RecordModel } from "pocketbase"
 import axios from "axios"
@@ -9,7 +15,7 @@ import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
 import { SessionData } from "../auth/lib"
 import { verifySession } from "../auth/actions"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -37,43 +43,46 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
-  const data = await pb.collection(Collections.KomEfforts).getFullList({
-    filter: "(gained_at != null || lost_at != null)",
-    expand: "segment",
-    fields:
-      "segment_id,gained_at,lost_at,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
-    sort: "-updated",
+  const data = await pb.collection(Collections.KomGainLoss).getFullList({
+    filter: "created > '2024-12-31 23:59:59'",
+    expand: "kom_effort, kom_effort.segment",
+    fields: `status,\
+    created,\
+    expand.kom_effort.segment_id,\
+      expand.kom_effort.has_kom,\
+      expand.kom_effort.is_starred,\
+      expand.kom_effort.expand.segment.name,\
+      expand.kom_effort.expand.segment.city,\
+      expand.kom_effort.expand.segment.labels`,
+    sort: "-created",
   })
+
   return data.map((d) => ({
-    segment_id: d.segment_id,
-    name: d.expand!.segment.name,
-    city: d.expand!.segment.city,
-    lost_at: d.lost_at,
-    gained_at: d.gained_at,
-    is_starred: d.is_starred,
-    has_kom: d.has_kom,
-    labels: d.expand!.segment.labels,
+    status: d.status,
+    created: new Date(d.created),
+    segment_id: d.expand!.kom_effort.segment_id,
+    is_starred: d.expand!.kom_effort.is_starred,
+    has_kom: d.expand!.kom_effort.has_kom,
+    name: d.expand!.kom_effort.expand!.segment.name,
+    city: d.expand!.kom_effort.expand!.segment.city,
+    labels: d.expand!.kom_effort.expand!.segment.labels,
   }))
 }
 
 export const getTotalSegments = async (session: SessionData): Promise<TableSegment[]> => {
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-  console.log("GETTOTAL")
   pb.authStore.save(session.pbAuth)
 
   const data = await pb.collection(Collections.KomEfforts).getFullList({
     filter: "has_kom=true",
     expand: "segment",
-    fields:
-      "segment_id,gained_at,lost_at,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
+    fields: "segment_id,has_kom,is_starred,expand.segment.name,expand.segment.city,expand.segment.labels",
     sort: "-updated",
   })
   return data.map((d) => ({
     segment_id: d.segment_id,
     name: d.expand!.segment.name,
     city: d.expand!.segment.city,
-    lost_at: d.lost_at,
-    gained_at: d.gained_at,
     is_starred: d.is_starred,
     has_kom: d.has_kom,
     labels: d.expand!.segment.labels,
@@ -105,17 +114,15 @@ export const bulkUnstarSegments = async (recordIds: string[]) => {
   return Promise.all(recordIds.map((id) => pb.collection(Collections.KomEfforts).update(id, { is_starred: false })))
 }
 
-export const getKomCount = async (session: SessionData): Promise<KomTimeseriesRecord> => {
-  const { isLoggedIn, pbAuth } = session
-  if (!isLoggedIn || pbAuth == null) throw new Error("Couldn't authenticate!")
+export const getKomCount = async (session: SessionData): Promise<number> => {
+  const { isLoggedIn, pbAuth, userId } = session
+  if (!isLoggedIn || pbAuth == null || userId == null) throw new Error("Couldn't authenticate!")
   pb.authStore.save(pbAuth)
 
-  const timeseriesRecordPromise: Promise<KomTimeseriesRecord> = pb
-    .collection(Collections.KomTimeseries)
-    .getFirstListItem("", {
-      sort: "-created",
-    })
-  return timeseriesRecordPromise
+  const userRecord: UserRecord = await pb.collection(Collections.Users).getFirstListItem(`id="${userId}"`, {
+    fields: "kom_count",
+  })
+  return userRecord.kom_count
 }
 
 /**

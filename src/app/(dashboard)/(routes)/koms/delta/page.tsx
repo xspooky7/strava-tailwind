@@ -6,12 +6,13 @@ import { CustomTableSkeleton } from "../../table-components/table-skeleton"
 import { verifySession } from "@/app/lib/auth/actions"
 import { unstable_cache } from "next/cache"
 
-const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"])
+const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"], {
+  revalidate: 900, // 15 minutes
+})
 
 export default async function DeltaKomPage() {
   const session = await verifySession()
   const data = getCachedDeltaSegments(session)
-
   return (
     <div className="container mx-auto py-5 md:px-4">
       <Suspense
@@ -24,7 +25,7 @@ export default async function DeltaKomPage() {
           />
         }
       >
-        <KomTable promises={data} columns={columns} sort="status" tableId="delta" />
+        <KomTable promises={data} columns={columns} sort="status" />
       </Suspense>
     </div>
   )

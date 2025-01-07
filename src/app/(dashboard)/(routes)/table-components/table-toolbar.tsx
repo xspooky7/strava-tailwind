@@ -13,10 +13,9 @@ import { usePathname } from "next/navigation"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
-  revalidateId: string
 }
 
-export function TableToolbar<TData>({ table, revalidateId }: DataTableToolbarProps<TData>) {
+export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
   const path = usePathname()
 

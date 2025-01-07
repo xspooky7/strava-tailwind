@@ -24,7 +24,7 @@ const getCachedKomCount = unstable_cache(async (session) => getKomCount(session)
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const sidebarIsOpen = await getSidebarState()
   const session = await verifySession()
-  const komTimeSeries = getCachedKomCount(session)
+  const komCount = getCachedKomCount(session)
 
   return (
     <SidebarProvider defaultOpen={sidebarIsOpen}>
@@ -47,7 +47,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             <div className="flex mx-auto space-x-2 justify-evenly items-center px-2 py-1 rounded bg-secondary text-secondary-foreground font-medium">
               <CrownIcon height={17} width={17} />
               <Suspense fallback={<span>0</span>}>
-                <TotalKomCount timeSeriesPromise={komTimeSeries} />
+                <TotalKomCount komCount={komCount} />
               </Suspense>
             </div>
             <ThemeToggle />

@@ -38,25 +38,22 @@ interface DataTableProps {
   columns: ColumnDef<TableSegment>[]
   tableSegments: TableSegment[]
   sort: string
-  tableId: string
 }
 
 export const KomTable = ({
   columns,
   promises,
   sort,
-  tableId,
 }: {
   promises: Promise<any>
   columns: ColumnDef<TableSegment>[]
   sort: string
-  tableId: string
 }) => {
   const data = React.use(promises)
-  return <KomTableUse columns={columns} tableSegments={data} sort={sort} tableId={tableId} />
+  return <KomTableUse columns={columns} tableSegments={data} sort={sort} />
 }
 
-function KomTableUse({ columns, tableSegments, sort, tableId }: DataTableProps) {
+function KomTableUse({ columns, tableSegments, sort }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({ label: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -75,8 +72,7 @@ function KomTableUse({ columns, tableSegments, sort, tableId }: DataTableProps) 
         setData((prevData) =>
           prevData.map((item) => (id === item.segment_id ? { ...item, is_starred: !isCurrentlyStarred } : item))
         )
-        setData((prevData) => prevData.filter((segment) => segment.segment_id !== id))
-        revalidateTag(tableId)
+        //todo revalidation
       })
       .catch((err) => console.log(JSON.stringify(err)))
   }
@@ -168,7 +164,7 @@ function KomTableUse({ columns, tableSegments, sort, tableId }: DataTableProps) 
   })
   return (
     <div className="space-y-4">
-      <TableToolbar table={table} revalidateId={tableId} />
+      <TableToolbar table={table} />
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>

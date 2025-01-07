@@ -4,7 +4,7 @@ import { ColumnDef, Row } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { TableColumnHeader } from "../../table-components/table-column-header"
 import { TableRowActions } from "../../table-components/table-row-action"
-import { CircleMinusIcon, CirclePlusIcon, StarIcon } from "lucide-react"
+import { CircleMinusIcon, CirclePlusIcon } from "lucide-react"
 import { TableSegment, Label } from "../../../../../../types"
 
 export const columns: ColumnDef<TableSegment>[] = [
@@ -57,25 +57,17 @@ export const columns: ColumnDef<TableSegment>[] = [
     header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
     sortingFn: (rowA, rowB, columnId) => getDateFromRow(rowA) - getDateFromRow(rowB),
     cell: ({ row }) => {
-      let status = ""
-      if (row.original.has_kom) {
-        if (row.original.gained_at) status = "Gained"
-      } else if (row.original.lost_at) status = "Lost"
-
+      const createdDateString = new Date(row.original.created!).toDateString().slice(4)
       const bubble =
-        status === "Gained" ? (
+        row.original.status !== "lost" ? (
           <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
             <CirclePlusIcon className="mr-2 h-4 w-4 text-[#28A745]" />
-            <span className="text-[#28A745]">
-              {new Date(row.original.gained_at![row.original.gained_at!.length - 1]).toDateString().slice(4)}
-            </span>
+            <span className="text-[#28A745]">{createdDateString}</span>
           </div>
         ) : (
           <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
             <CircleMinusIcon className="mr-2 h-4 w-4 text-destructive" />
-            <span className="text-destructive">
-              {new Date(row.original.lost_at![row.original.lost_at!.length - 1]).toDateString().slice(4)}
-            </span>
+            <span className="text-destructive">{createdDateString}</span>
           </div>
         )
 
@@ -89,10 +81,5 @@ export const columns: ColumnDef<TableSegment>[] = [
 ]
 
 const getDateFromRow = (row: Row<TableSegment>): number => {
-  const { gained_at, lost_at } = row.original
-
-  const lastGained = gained_at?.[gained_at.length - 1] || 0
-  const lastLost = lost_at?.[lost_at.length - 1] || 0
-
-  return Math.max(lastGained, lastLost)
+  return new Date(row.original.created!).getTime()
 }
