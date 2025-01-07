@@ -355,8 +355,6 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
   throw new Error(`503 error on fetching page ${page} after ${retries} retries.`)
 }
 
-const fetchAdditionalData = () => {}
-
 //Helper
 const log = (message: string, newline = true, payload?: object) => {
   console.log(message)
