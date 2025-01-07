@@ -306,16 +306,15 @@ export async function GET(req: Request) {
           })
       )
       await Promise.all(concurrentUpdates)
-      console.log(order)
 
-      fetch("http://localhost:8080/service", {
+      /*fetch("http://localhost:8080/service", {
         method: "POST",
         headers: {
           "x-api-key": process.env.UPDATE_API_KEY!,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(order),
-      })
+      })*/
     } else {
       log(`[INFO] Sets are identical (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
     }
