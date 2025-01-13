@@ -11,7 +11,7 @@ export default async function TailwindPage() {
   const promises = loadStarredSegments(session)
 
   return (
-    <div className="container mx-auto py-5 px-4">
+    <div className="px-5 py-5 md:px-4">
       <Suspense
         fallback={
           <CustomTableSkeleton

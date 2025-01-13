@@ -14,7 +14,7 @@ const KomTotalPage = async () => {
   const data: Promise<TableSegment[]> = getCachedTotalSegments(session)
 
   return (
-    <div className="container mx-auto py-5 md:px-4">
+    <div className="px-5 py-5 md:px-4">
       <Suspense
         fallback={
           <CustomTableSkeleton

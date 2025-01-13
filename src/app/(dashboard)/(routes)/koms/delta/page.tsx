@@ -14,7 +14,7 @@ export default async function DeltaKomPage() {
   const session = await verifySession()
   const data = getCachedDeltaSegments(session)
   return (
-    <div className="container mx-auto py-5 md:px-4">
+    <div className="px-5 py-5 md:px-4">
       <Suspense
         fallback={
           <CustomTableSkeleton

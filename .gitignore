@@ -38,3 +38,4 @@ next-env.d.ts
 
 /todos.md
 src/app/api/fix/route.ts
+src/app/(dashboard)/(routes)/tasks/page.tsx
