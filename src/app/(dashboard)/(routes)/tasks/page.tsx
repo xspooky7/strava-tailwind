@@ -72,14 +72,14 @@ const tasks: Feature[] = [
       },
       {
         id: "bug3",
-        check: false,
+        check: true,
         label: "Unstar on strava leads to discrepancy of information",
         sprint: 4,
         category: "Bug",
       },
       {
         id: "be3",
-        check: false,
+        check: true,
         label: "Effort details should be saved on all active koms",
         sprint: 1,
         category: "Backend",

@@ -1,7 +1,13 @@
 import axios from "axios"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { Collections, KomEffortRecord, KomGainLossRecord, SegmentRecord } from "../../../../pocketbase-types"
+import {
+  Collections,
+  EffortDetailRecord,
+  KomEffortRecord,
+  KomGainLossRecord,
+  SegmentRecord,
+} from "../../../../pocketbase-types"
 import pb from "@/app/lib/pocketbase"
 import { getStravaToken } from "@/app/lib/data-access/strava"
 import { fetchNewSegmentRecord } from "@/app/lib/data-access/segments"
@@ -26,7 +32,6 @@ export async function GET(req: Request) {
     const date = new Date()
     const currentHour = (date.getUTCHours() + 1) % 24 //CEST
     const currentMinute = date.getUTCMinutes()
-    const now = date.getTime()
 
     log(
       `[INIT] ${currentHour < 10 ? "0" + currentHour : currentHour} : ${
@@ -55,7 +60,7 @@ export async function GET(req: Request) {
     log("[DATABASE] Fetching Kom Effort Collection")
     const userEfforts: KomEffortRecord[] = await pb.collection(Collections.KomEfforts).getFullList({
       filter: `user="${userId}"`,
-      fields: "segment_id, id, has_kom, gained_at, lost_at",
+      fields: "segment_id, id, has_kom, is_starred",
       cache: "no-store",
     })
     const ownedKomIds: Set<number> = userEfforts
@@ -63,16 +68,16 @@ export async function GET(req: Request) {
       : new Set()
 
     log(`[INFO] Kom Effort count: ${userEfforts.length}, active Koms: ${ownedKomIds.size}`)
-    const apiPromises: Promise<Set<number>>[] = []
-    let apiResults: Set<number>[] = []
-    let apiIds: Set<number> = new Set()
+    const apiPromises: Promise<Map<number, { detail: EffortDetailRecord; starred: boolean }>>[] = []
+    let apiResults: Map<number, { detail: EffortDetailRecord; starred: boolean }>[] = []
+    let apiDetails: Map<number, { detail: EffortDetailRecord; starred: boolean }> = new Map()
 
     const p = ownedKomIds.size / 200
     const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
 
     log(`[API] Fetching First Kom Page`)
     try {
-      apiIds = await fetchKomPageWithRetry(1, stravaToken, 3, 1500)
+      apiDetails = await fetchKomPageWithRetry(1, stravaToken, 3, 1500)
     } catch (error) {
       return errorResponse("Couldn't fetch first Kom Page ", 503, error)
     }
@@ -87,9 +92,27 @@ export async function GET(req: Request) {
       } catch (error) {
         return errorResponse("Couldn't fetch Kom Lists", 503, error)
       }
-      apiIds = apiIds.union(apiResults.reduce((acc, curr) => acc.union(curr), new Set()))
+      for (const result of apiResults) {
+        for (const [key, value] of result) {
+          apiDetails.set(key, value)
+        }
+      }
     }
 
+    const concurrentUpdates: Promise<any>[] = []
+    log("[DATABASE] Updating star status of owned koms")
+    try {
+      userEfforts.forEach((effort: KomEffortRecord) => {
+        const apiIsStarred = apiDetails.get(effort.segment_id)?.starred
+        if (effort.is_starred !== apiIsStarred) {
+          concurrentUpdates.push(pb.collection(Collections.KomEfforts).update(effort.id!, { is_starred: apiIsStarred }))
+        }
+      })
+    } catch (error) {
+      log(`[WARNING] Failed to update star status of owned koms`)
+    }
+
+    const apiIds: Set<number> = new Set(apiDetails.keys())
     if (ownedKomIds.size - apiIds.size > 150) return errorResponse("Can't account for complete Kom List", 510)
 
     log("[API] Success")
@@ -97,8 +120,6 @@ export async function GET(req: Request) {
     if (ownedKomIds.symmetricDifference(apiIds).size !== 0) {
       const [lostKomIds, gainedKomIds] = [ownedKomIds.difference(apiIds), apiIds.difference(ownedKomIds)]
       log(`[CALC] Kom Difference: ${gainedKomIds.size} gained - ${lostKomIds.size} lost`)
-
-      const concurrentUpdates: Promise<any>[] = []
 
       const order: { ref_id: string; segment_id: number; status: "gained" | "lost"; gender: "f" | "m" }[] = []
 
@@ -113,7 +134,7 @@ export async function GET(req: Request) {
           log(
             `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
           )
-
+          const effortDetail = storedEffort.pr_effort!
           concurrentUpdates.push(
             pb
               .collection(Collections.KomEfforts)
@@ -142,6 +163,7 @@ export async function GET(req: Request) {
             segment_id: lostId,
             kom_effort: storedEffort.id,
             status: "lost",
+            user_effort: effortDetail,
           }
 
           let lossRecordRef
@@ -162,10 +184,14 @@ export async function GET(req: Request) {
         log("[INFO] Processing gained Koms")
         for (const gainedId of gainedKomIds) {
           const storedEffort = userEfforts.find((effort) => effort.segment_id === gainedId)
+          const effortDetail = apiDetails.get(gainedId)?.detail
+          const detailRecord = await pb.collection(Collections.EffortDetails).create(effortDetail)
+
           if (!(storedEffort == null || storedEffort.id == null)) {
             log(
               `[DATABASE] Updating a present Kom Effort Record (seg_id:${storedEffort.segment_id}, effort_ref:${storedEffort.id})`
             )
+
             concurrentUpdates.push(
               pb
                 .collection(Collections.KomEfforts)
@@ -173,6 +199,7 @@ export async function GET(req: Request) {
                   storedEffort.id!,
                   {
                     has_kom: true,
+                    pr_effort: detailRecord.id,
                   },
                   { cache: "no-store" }
                 )
@@ -193,6 +220,7 @@ export async function GET(req: Request) {
               segment_id: gainedId,
               kom_effort: storedEffort.id,
               status: "gained_active",
+              user_effort: detailRecord.id,
             }
 
             let gainRecordRef
@@ -249,6 +277,7 @@ export async function GET(req: Request) {
               segment_id: seg_ref.segment_id,
               is_starred: false,
               has_kom: true,
+              pr_effort: detailRecord.id,
             }
             let newKomEffort: KomEffortRecord
             try {
@@ -268,6 +297,7 @@ export async function GET(req: Request) {
               segment_id: seg_ref.segment_id,
               kom_effort: newKomEffort.id,
               status: active ? "gained_active" : "gained_passive",
+              user_effort: detailRecord.id,
             }
 
             let gainRecordRef
@@ -307,14 +337,15 @@ export async function GET(req: Request) {
       )
       await Promise.all(concurrentUpdates)
 
-      /*fetch("http://localhost:8080/service", {
+      log(`[INFO] Sending order (${order.length}) to gcloud`)
+      fetch(process.env.GCLOUD_URL!, {
         method: "POST",
         headers: {
-          "x-api-key": process.env.UPDATE_API_KEY!,
           "Content-Type": "application/json",
+          Authorization: "Bearer " + process.env.GCLOUD_AUTH,
         },
         body: JSON.stringify(order),
-      })*/
+      })
     } else {
       log(`[INFO] Sets are identical (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
     }
@@ -328,7 +359,12 @@ export async function GET(req: Request) {
 }
 
 //Strava Api
-const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, delay = 1000) => {
+const fetchKomPageWithRetry = async (
+  page: number,
+  token: string,
+  retries = 2,
+  delay = 1000
+): Promise<Map<number, { detail: EffortDetailRecord; starred: boolean }>> => {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await axios({
@@ -338,9 +374,26 @@ const fetchKomPageWithRetry = async (page: number, token: string, retries = 2, d
       })
       STRAVA_REQUEST_COUNT++
       log(`  - ${page} (${response.data.length})`)
-      const idArray: number[] = response.data.map((entry: any) => entry.segment.id)
-
-      return new Set(idArray)
+      const effortDetails: Map<number, { detail: EffortDetailRecord; starred: boolean }> = new Map()
+      response.data.forEach((kom: any) => {
+        let average_speed = 0
+        if (kom.distance && kom.elapsed_time)
+          average_speed = Math.round((kom.distance / kom.elapsed_time) * 3.6 * 100) / 100
+        effortDetails.set(kom.segment.id, {
+          detail: {
+            elapsed_time: kom.elapsed_time,
+            average_cadence: kom.average_cadence,
+            average_watts: kom.average_watts,
+            average_heartrate: kom.average_heartrate,
+            max_heartrate: kom.max_heartrate,
+            start_date: kom.start_date_local,
+            average_speed: average_speed,
+            segment_effort_id: kom.activity.id,
+          },
+          starred: kom.segment.starred,
+        })
+      })
+      return effortDetails
     } catch (error) {
       if (axios.isAxiosError(error) && error.status === 503) {
         log(`[ERROR] 503 error on attempt ${i + 1} fetching page ${page}, retrying in ${delay}ms...`)

@@ -44,10 +44,11 @@ export type EffortDetailRecord = {
   average_cadence?: number
   average_heartrate?: number
   average_watts?: number
-  effort_id?: number
+  average_speed?: number
   elapsed_time?: number
   max_heartrate?: number
   start_date?: string
+  segment_effort_id: string
 }
 
 export type KomTimeseriesRecord = {
@@ -69,7 +70,7 @@ export type UserTokenRecord = {
 
 export type KomEffortRecord = {
   id?: string
-  effort_detail?: RecordIdString
+  pr_effort?: RecordIdString
   user: RecordIdString
   segment: RecordIdString
   segment_id: number
@@ -86,7 +87,8 @@ export type KomGainLossRecord = {
   kom_effort?: string
   opponent?: string
   status: "gained_active" | "gained_passive" | "lost"
-  detail?: string
+  opponent_effort?: RecordIdString
+  user_effort?: RecordIdString
 }
 
 export type SegmentRecord = {
