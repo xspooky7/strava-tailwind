@@ -7,7 +7,7 @@ import { verifySession } from "@/app/lib/auth/actions"
 import { unstable_cache } from "next/cache"
 
 const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"], {
-  revalidate: 900, // 15 minutes
+  revalidate: 120, // 2 minutes
 })
 
 export default async function DeltaKomPage() {

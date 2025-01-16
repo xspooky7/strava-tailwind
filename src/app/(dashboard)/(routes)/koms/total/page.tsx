@@ -7,7 +7,9 @@ import { Suspense } from "react"
 import { verifySession } from "@/app/lib/auth/actions"
 import { unstable_cache } from "next/cache"
 
-const getCachedTotalSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"])
+const getCachedTotalSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"], {
+  revalidate: 120, // 2 minutes
+})
 
 const KomTotalPage = async () => {
   const session = await verifySession()
@@ -25,7 +27,7 @@ const KomTotalPage = async () => {
           />
         }
       >
-        <KomTable promises={data} columns={columns} sort="city" />
+        <KomTable promises={data} columns={columns} sort="name" />
       </Suspense>
     </div>
   )

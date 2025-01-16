@@ -84,9 +84,16 @@ const tasks: Feature[] = [
         sprint: 1,
         category: "Backend",
       },
-      { id: "be4", check: false, label: "Scrape Effort and Pfp Links", sprint: 1, category: "Backend" },
+      { id: "be4", check: true, label: "Scrape Effort and Pfp Links", sprint: 1, category: "Backend" },
       { id: "ui5", check: false, label: "Rework color themes", sprint: 4, category: "UI" },
       { id: "ui6", check: false, label: "Make logo", sprint: 5, category: "UI" },
+      {
+        id: "ui7",
+        check: false,
+        label: "Rewrite Scraper with TypeScript + make it more robust",
+        sprint: 5,
+        category: "Backend",
+      },
     ],
   },
   {
@@ -111,7 +118,7 @@ const tasks: Feature[] = [
     items: [
       { id: "bug4", check: false, label: "Fix Star/Unstar flow", sprint: 3, category: "Bug" },
       { id: "feat1", check: false, label: "Refresh on triggered revalidation", sprint: 2, category: "Backend" },
-      { id: "be1", check: false, label: "Timed revalidation for Kom Tables", sprint: 1, category: "Backend" },
+      { id: "be1", check: true, label: "Timed revalidation for Kom Tables", sprint: 1, category: "Backend" },
       { id: "ui4", check: false, label: "Cleanup Kom Tables col spacing", sprint: 3, category: "UI" },
       { id: "feat4", check: false, label: "Make Kom Table cols toggable", sprint: 2, category: "Feature" },
       { id: "feat5", check: false, label: "Save Table col States in Cookies", sprint: 2, category: "Feature" },
@@ -144,7 +151,7 @@ const tasks: Feature[] = [
       {
         id: "tail2",
         check: false,
-        label: "Better structured caching",
+        label: "Better structured caching of this route",
         sprint: 2,
         category: "Backend",
       },
@@ -193,7 +200,6 @@ function TaskItem({ task }: { task: Task }) {
 }
 
 export default async function TaskList() {
-  await verifySession()
   const currentSprintTasks = tasks.flatMap((feature) => feature.items.filter((task) => task.sprint === currentSprint))
 
   return (
