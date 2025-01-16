@@ -13,6 +13,12 @@ import { getStravaToken } from "@/app/lib/data-access/strava"
 import { fetchNewSegmentRecord } from "@/app/lib/data-access/segments"
 import { ACTIVELY_ACQUIRED_KOM_THRESHOLD } from "../../../../constants"
 
+interface Order {
+  ref_id: string
+  segment_id: number
+  status: "gained" | "lost"
+  gender: "f" | "m"
+}
 export const maxDuration = 60 // vercel
 
 let DEBUG_LOG = ""
@@ -121,7 +127,7 @@ export async function GET(req: Request) {
       const [lostKomIds, gainedKomIds] = [ownedKomIds.difference(apiIds), apiIds.difference(ownedKomIds)]
       log(`[CALC] Kom Difference: ${gainedKomIds.size} gained - ${lostKomIds.size} lost`)
 
-      const order: { ref_id: string; segment_id: number; status: "gained" | "lost"; gender: "f" | "m" }[] = []
+      const order: Order[] = []
 
       // handles lost koms
       if (lostKomIds.size) {
@@ -337,15 +343,7 @@ export async function GET(req: Request) {
       )
       await Promise.all(concurrentUpdates)
 
-      log(`[INFO] Sending order (${order.length}) to gcloud`)
-      fetch(process.env.GCLOUD_URL!, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + process.env.GCLOUD_AUTH,
-        },
-        body: JSON.stringify(order),
-      })
+      await sendOrder(order)
     } else {
       log(`[INFO] Sets are identical (Db: ${ownedKomIds.size} - Api: ${apiIds.size})`)
     }
@@ -405,6 +403,18 @@ const fetchKomPageWithRetry = async (
     }
   }
   throw new Error(`503 error on fetching page ${page} after ${retries} retries.`)
+}
+
+async function sendOrder(order: Order[]) {
+  log(`[INFO] Sending order (${order.length}) to gcloud`)
+  fetch(process.env.GCLOUD_URL!, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + process.env.GCLOUD_AUTH,
+    },
+    body: JSON.stringify(order),
+  })
 }
 
 //Helper
