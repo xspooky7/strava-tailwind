@@ -406,15 +406,17 @@ const fetchKomPageWithRetry = async (
 }
 
 async function sendOrder(order: Order[]) {
-  log(`[INFO] Sending order (${order.length}) to gcloud`)
-  fetch(process.env.GCLOUD_URL!, {
+  log(`[INFO] Sending order (${order.length}) to gcloud... `, false)
+  const gcloudStatus = await fetch(process.env.GCLOUD_URL!, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + process.env.GCLOUD_AUTH,
+      "x-api-key": process.env.GCLOUD_AUTH!,
     },
     body: JSON.stringify(order),
   })
+  const status = await gcloudStatus.json()
+  log(status)
 }
 
 //Helper

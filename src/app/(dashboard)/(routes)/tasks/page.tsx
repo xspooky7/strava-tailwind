@@ -120,7 +120,7 @@ const tasks: Feature[] = [
       { id: "feat1", check: false, label: "Refresh on triggered revalidation", sprint: 2, category: "Backend" },
       { id: "be1", check: true, label: "Timed revalidation for Kom Tables", sprint: 1, category: "Backend" },
       { id: "ui4", check: false, label: "Cleanup Kom Tables col spacing", sprint: 3, category: "UI" },
-      { id: "feat4", check: false, label: "Make Kom Table cols toggable", sprint: 2, category: "Feature" },
+      { id: "feat4", check: true, label: "Make Kom Table cols toggable", sprint: 2, category: "Feature" },
       { id: "feat5", check: false, label: "Save Table col States in Cookies", sprint: 2, category: "Feature" },
       {
         id: "table5",
