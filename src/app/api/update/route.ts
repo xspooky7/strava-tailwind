@@ -110,7 +110,7 @@ export async function GET(req: Request) {
     try {
       userEfforts.forEach((effort: KomEffortRecord) => {
         const apiIsStarred = apiDetails.get(effort.segment_id)?.starred
-        if (effort.is_starred !== apiIsStarred) {
+        if (apiIsStarred != null && effort.is_starred !== apiIsStarred) {
           concurrentUpdates.push(pb.collection(Collections.KomEfforts).update(effort.id!, { is_starred: apiIsStarred }))
         }
       })
