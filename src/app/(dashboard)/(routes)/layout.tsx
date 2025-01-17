@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/sidebar/app-sidebar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
