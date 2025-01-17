@@ -39,6 +39,8 @@ export const columns: ColumnDef<TableSegment>[] = [
       if (row.original.labels) return value.every((element: Label) => row.original.labels!.includes(element))
       return false
     },
+    enableSorting: false,
+    enableHiding: false,
   },
   {
     accessorKey: "city",

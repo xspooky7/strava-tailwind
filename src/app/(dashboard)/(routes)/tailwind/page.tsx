@@ -4,6 +4,11 @@ import { loadStarredSegments } from "./starred-segments"
 import { Suspense } from "react"
 import { verifySession } from "@/app/lib/auth/actions"
 import { CustomTableSkeleton } from "../table-components/table-skeleton"
+import { unstable_cache } from "next/cache"
+
+const getCachedTwilwindSegments = unstable_cache(async (session) => loadStarredSegments(session), ["tailwind"], {
+  revalidate: 240, // 4 minutes
+})
 
 export default async function TailwindPage() {
   const session = await verifySession()

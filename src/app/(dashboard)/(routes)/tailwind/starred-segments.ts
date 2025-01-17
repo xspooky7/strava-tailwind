@@ -76,7 +76,6 @@ export const loadStarredSegments = async (session: SessionData) => {
             has_kom: known.has_kom,
             labels: known.expand!.segment.labels,
             average_grade: known.expand!.segment.average_grade,
-            profile_url: known.expand!.segment.profile_url_light,
             leader_qom: known.expand!.segment.leader_qom,
           })
           return false
@@ -119,7 +118,6 @@ export const loadStarredSegments = async (session: SessionData) => {
           has_kom: false,
           labels: obj.value.labels,
           average_grade: obj.value.average_grade,
-          profile_url: obj.value.profile_url_light,
           leader_qom: obj.value.leader_qom,
         })
         return { ...obj.value }

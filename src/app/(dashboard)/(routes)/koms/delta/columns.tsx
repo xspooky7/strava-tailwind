@@ -42,6 +42,8 @@ export const columns: ColumnDef<TableSegment>[] = [
     },
     header: ({ column }) => null,
     cell: ({ row }) => null,
+    enableSorting: false,
+    enableHiding: false,
   },
 
   {
@@ -77,6 +79,8 @@ export const columns: ColumnDef<TableSegment>[] = [
   {
     id: "actions",
     cell: ({ row }) => <TableRowActions row={row} />,
+    enableSorting: false,
+    enableHiding: false,
   },
 ]
 

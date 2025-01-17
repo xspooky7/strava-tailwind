@@ -10,6 +10,7 @@ import { RefreshCwIcon } from "lucide-react"
 import { revalidate } from "@/app/lib/data-access/segments"
 import { toast } from "sonner"
 import { usePathname } from "next/navigation"
+import { DataTableViewOptions } from "./data-table-view-option"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -54,6 +55,7 @@ export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
           </Button>
         )}
       </div>
+      <DataTableViewOptions table={table} />
     </div>
   )
 }

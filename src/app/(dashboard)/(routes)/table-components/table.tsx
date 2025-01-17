@@ -20,7 +20,6 @@ import { TablePagination } from "./table-pagination"
 import { TableToolbar } from "./table-toolbar"
 import { TableSegment } from "../../../../../types"
 import { toggleStarEffort } from "@/app/lib/data-access/segments"
-import { revalidateTag } from "next/cache"
 import { StarIcon, StarOffIcon } from "lucide-react"
 import {
   AlertDialog,

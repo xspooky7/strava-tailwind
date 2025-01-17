@@ -36,6 +36,7 @@
     "openmeteo": "^1.1.4",
     "pocketbase": "^0.21.5",
     "react": "19.0.0",
+    "react-confetti": "^6.2.2",
     "react-dom": "19.0.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.3",

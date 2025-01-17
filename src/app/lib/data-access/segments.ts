@@ -1,13 +1,7 @@
 "use server"
 
 import pb from "@/app/lib/pocketbase"
-import {
-  Collections,
-  KomEffortRecord,
-  KomTimeseriesRecord,
-  SegmentRecord,
-  UserRecord,
-} from "../../../../pocketbase-types"
+import { Collections, KomEffortRecord, SegmentRecord, UserRecord } from "../../../../pocketbase-types"
 import { TableSegment } from "../../../../types"
 import { RecordModel } from "pocketbase"
 import axios from "axios"
@@ -15,7 +9,7 @@ import { getLabel, getPath, sanatizeSegment } from "@/app/lib/utils"
 import { getStravaToken } from "./strava"
 import { SessionData } from "../auth/lib"
 import { verifySession } from "../auth/actions"
-import { revalidatePath, revalidateTag } from "next/cache"
+import { revalidatePath } from "next/cache"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -99,7 +93,7 @@ export const getStarredSegments = async (): Promise<RecordModel[]> => {
     filter: `user="${session.userId}" && is_starred=true`,
     expand: "segment",
     fields: `id,expand.segment.name,expand.segment.city,segment_id,expand.segment.distance,expand.segment.labels,expand.segment.path,
-      is_starred,has_kom,expand.segment.average_grade,expand.segment.profile_url_light,expand.segment.leader_qom`,
+      is_starred,has_kom,expand.segment.average_grade,expand.segment.leader_qom`,
   })
 
   return starredSegmentsRequest

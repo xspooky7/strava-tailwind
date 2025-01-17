@@ -11,6 +11,7 @@ import { Suspense } from "react"
 import { TotalKomCount } from "@/components/total-kom-count"
 import { unstable_cache } from "next/cache"
 import { verifySession } from "@/app/lib/auth/actions"
+import { ConfettiMaker } from "@/components/confetti-maker"
 
 const getSidebarState = async () => {
   const cookieStore = await cookies()
@@ -19,7 +20,7 @@ const getSidebarState = async () => {
   return sidebarOpen === "true"
 }
 
-const getCachedKomCount = unstable_cache(async (session) => getKomCount(session), ["count"])
+const getCachedKomCount = unstable_cache(async (session) => getKomCount(session), ["count"], { revalidate: 60 })
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   const sidebarIsOpen = await getSidebarState()
@@ -28,6 +29,9 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider defaultOpen={sidebarIsOpen}>
+      <Suspense fallback={<span>0</span>}>
+        <ConfettiMaker komCount={komCount} />
+      </Suspense>
       <AppSidebar />
       <SidebarInset>
         <header className="flex px-4 h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
