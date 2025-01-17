@@ -29,7 +29,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider defaultOpen={sidebarIsOpen}>
-      <Suspense fallback={<span>0</span>}>
+      <Suspense fallback={null}>
         <ConfettiMaker komCount={komCount} />
       </Suspense>
       <AppSidebar />
