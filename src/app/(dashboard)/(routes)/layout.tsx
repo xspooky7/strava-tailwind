@@ -41,7 +41,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Strava Tools</BreadcrumbLink>
+                  <BreadcrumbLink href="#">Strava App</BreadcrumbLink>
                 </BreadcrumbItem>
                 <Breadcrumbs />
               </BreadcrumbList>

@@ -408,7 +408,7 @@ const fetchKomPageWithRetry = async (
 async function sendOrder(order: Order[]) {
   log(`[INFO] Sending order (${order.length}) to gcloud... `, false)
   try {
-    const gcloudStatus = await fetch(process.env.GCLOUD_URL!, {
+    const gcloudResponse = await fetch(process.env.GCLOUD_URL!, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -416,8 +416,7 @@ async function sendOrder(order: Order[]) {
       },
       body: JSON.stringify(order),
     })
-    const status = await gcloudStatus.json()
-    log(status)
+    log(gcloudResponse.status + "")
   } catch (error) {
     log(`[WARNING] GCloud Error`)
   }

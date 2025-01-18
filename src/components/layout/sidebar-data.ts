@@ -1,6 +1,9 @@
 import {
+  ArrowRightLeftIcon,
+  ChartLineIcon,
   CrownIcon,
   LayoutDashboardIcon,
+  ListIcon,
   MailIcon,
   PaletteIcon,
   Settings2Icon,
@@ -32,15 +35,18 @@ export const sidebarData: SidebarData = {
           items: [
             {
               title: "Overview",
+              icon: ChartLineIcon,
               url: "/koms",
-            },
-            {
-              title: "Total",
-              url: "/koms/total",
             },
             {
               title: "Delta",
               url: "/koms/delta",
+              icon: ArrowRightLeftIcon,
+            },
+            {
+              title: "Total",
+              url: "/koms/total",
+              icon: ListIcon,
             },
           ],
         },
