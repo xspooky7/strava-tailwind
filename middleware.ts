@@ -1,4 +1,5 @@
-import { SessionData, sessionOptions } from "@/app/lib/auth/lib"
+import { sessionOptions } from "@/app/auth/session-options"
+import { SessionData } from "@/app/auth/types"
 import { getIronSession } from "iron-session"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"

@@ -13,7 +13,7 @@ import {
 } from "../ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Button } from "../ui/button"
-import { logout } from "@/app/lib/auth/actions"
+import { logout } from "@/app/auth/actions/logout"
 
 export function NavUser({
   user,

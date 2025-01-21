@@ -6,7 +6,7 @@ import { Icons } from "@/components/icons"
 import { NavGroup } from "./nav-group"
 import { sidebarData } from "./sidebar-data"
 import { Jost } from "next/font/google"
-import { cn } from "@/app/lib/utils"
+import { cn } from "@/lib/utils"
 
 const jost = Jost({
   subsets: ["latin"], // Specify character subsets

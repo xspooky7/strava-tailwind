@@ -7,11 +7,10 @@ import {
   KomEffortRecord,
   KomGainLossRecord,
   SegmentRecord,
-} from "../../../../pocketbase-types"
-import pb from "@/app/lib/pocketbase"
-import { getStravaToken } from "@/app/lib/data-access/strava"
-import { fetchNewSegmentRecord } from "@/app/lib/data-access/segments"
-import { ACTIVELY_ACQUIRED_KOM_THRESHOLD } from "../../../../constants"
+} from "@/lib/types/pocketbase-types"
+import pb from "@/lib/pocketbase"
+import { fetchNewSegmentRecord, getStravaToken } from "@/lib/strava"
+import { ACTIVELY_ACQUIRED_KOM_THRESHOLD } from "@/lib/constants"
 
 interface Order {
   ref_id: string
@@ -78,8 +77,7 @@ export async function GET(req: Request) {
     let apiResults: Map<number, { detail: EffortDetailRecord; starred: boolean }>[] = []
     let apiDetails: Map<number, { detail: EffortDetailRecord; starred: boolean }> = new Map()
 
-    const p = ownedKomIds.size / 200
-    const max_pages = Number.isInteger(p) ? p + 1 : Math.ceil(p)
+    const max_pages = Math.ceil(ownedKomIds.size / 200)
 
     log(`[API] Fetching First Kom Page`)
     try {
@@ -88,7 +86,7 @@ export async function GET(req: Request) {
       return errorResponse("Couldn't fetch first Kom Page ", 503, error)
     }
 
-    if (max_pages > 1) {
+    if (apiDetails.size === 200) {
       log(`[API] Fetching ${max_pages - 1} more Kom Pages `)
       try {
         for (let page = 2; page <= max_pages; page++) {
@@ -102,6 +100,21 @@ export async function GET(req: Request) {
         for (const [key, value] of result) {
           apiDetails.set(key, value)
         }
+      }
+    }
+
+    const siteWrap = apiDetails.size / 200 === max_pages
+
+    if (siteWrap) {
+      const page = max_pages + 1
+      log(`[API] Fetching an extra page (${page})`)
+      try {
+        const pageResult = await fetchKomPageWithRetry(page, stravaToken)
+        for (const [key, value] of pageResult) {
+          apiDetails.set(key, value)
+        }
+      } catch (error) {
+        return errorResponse(`Couldn't fetch extra page (${page})`, 503, error)
       }
     }
 
@@ -318,12 +331,14 @@ export async function GET(req: Request) {
             }
             log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${seg_ref.segment_id})`)
 
-            order.push({
-              ref_id: gainRecordRef.id,
-              segment_id: seg_ref.segment_id,
-              status: "gained",
-              gender: userGender,
-            })
+            if (active) {
+              order.push({
+                ref_id: gainRecordRef.id,
+                segment_id: seg_ref.segment_id,
+                status: "gained",
+                gender: userGender,
+              })
+            }
           }
         }
       }

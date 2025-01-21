@@ -1,7 +1,6 @@
 "use clint"
 
 import { ReactNode } from "react"
-
 import { ChevronRight } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
