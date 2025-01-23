@@ -11,22 +11,30 @@ import { toast } from "sonner"
 import { usePathname } from "next/navigation"
 import { DataTableViewOptions } from "./data-table-view-option"
 import { revalidate } from "@/lib/revalidate-path"
+import { RefObject } from "react"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
+  ref?: RefObject<HTMLInputElement | null>
 }
 
-export function TableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+export function TableToolbar<TData>({ table, ref }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
   const path = usePathname()
+
+  const handleScrollIntoView = (event: React.MouseEvent<HTMLInputElement>) => {
+    event.currentTarget.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
+          ref={ref}
           placeholder="Filter segments..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+          onClick={handleScrollIntoView}
           className="h-8 w-[150px] lg:w-[250px]"
         />
         <Button

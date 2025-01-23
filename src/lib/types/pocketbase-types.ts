@@ -9,7 +9,6 @@ import { Coordinate, Label, Line } from "./types"
 export enum Collections {
   EffortDetails = "effort_details",
   KomEfforts = "kom_efforts",
-  KomGainLoss = "kom_gain_loss",
   Segments = "segments",
   Users = "users",
   KomTimeseries = "kom_timeseries",
@@ -51,15 +50,6 @@ export type EffortDetailRecord = {
   segment_effort_id: string
 }
 
-export type KomTimeseriesRecord = {
-  id?: string
-  user: RecordIdString
-  date: string
-  amount: number
-  gained?: number
-  lost?: number
-}
-
 export type UserTokenRecord = {
   id?: string
   user: RecordIdString
@@ -80,15 +70,17 @@ export type KomEffortRecord = {
   is_starred: boolean
 }
 
-export type KomGainLossRecord = {
-  id?: string
-  user: string
-  segment_id: number
-  kom_effort?: string
-  opponent?: string
+export type KomTimeseriesRecord = {
+  id?: RecordIdString
+  user: RecordIdString
+  segment_id?: number
   status: "gained_active" | "gained_passive" | "lost"
+  opponent_name?: string
+  opponent_id?: number
+  kom_effort?: RecordIdString
   opponent_effort?: RecordIdString
   user_effort?: RecordIdString
+  opponent_pfp_url?: string
 }
 
 export type SegmentRecord = {

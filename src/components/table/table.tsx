@@ -81,9 +81,12 @@ function SegmentTableUse({ columnLayout, tableSegments, sort }: DataTableProps) 
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  const ref = React.useRef<HTMLInputElement>(null)
+
   return (
     <div className="space-y-4">
-      <TableToolbar table={table} />
+      <TableToolbar table={table} ref={ref} />
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>

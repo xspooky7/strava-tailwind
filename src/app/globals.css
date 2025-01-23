@@ -34,6 +34,11 @@ html :root {
     --destructive: 0 92.99% 56.11%;
     --destructive-foreground: 210 40% 98%;
     --ring: 220.67 97.83% 36.08%;
+    --chart-1: 220.47 98.26% 36.08%;
+    --chart-2: 210 40% 96.1%;
+    --chart-3: 210 40% 96.1%;
+    --chart-4: 210 40% 99.1%;
+    --chart-5: 220.47 101.26% 36.08%;
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
@@ -66,6 +71,11 @@ html :root {
     --destructive: 1.58 47.5% 52.94%;
     --destructive-foreground: 210 40% 98.04%;
     --ring: 225.45 71.22% 72.75%;
+    --chart-1: 0 0% 82.75%;
+    --chart-2: 225.45 71.22% 72.75%;
+    --chart-3: 234.55 17.83% 9.47%;
+    --chart-4: 225.45 71.22% 75.75%;
+    --chart-5: 0 3% 82.75%;
 
     --sidebar-backgroundold: 240 5.9% 10%;
     --sidebar-background: 234.55 17.46% 12.35%;

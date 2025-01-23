@@ -9,7 +9,7 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
   if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
   pb.authStore.save(session.pbAuth)
-  const data = await pb.collection(Collections.KomGainLoss).getFullList({
+  const data = await pb.collection(Collections.KomTimeseries).getFullList({
     filter: "created > '2024-12-31 23:59:59'",
     expand: "kom_effort, kom_effort.segment",
     fields: `status,

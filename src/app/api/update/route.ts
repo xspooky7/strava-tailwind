@@ -5,7 +5,7 @@ import {
   Collections,
   EffortDetailRecord,
   KomEffortRecord,
-  KomGainLossRecord,
+  KomTimeseriesRecord,
   SegmentRecord,
 } from "@/lib/types/pocketbase-types"
 import pb from "@/lib/pocketbase"
@@ -177,7 +177,7 @@ export async function GET(req: Request) {
               })
           )
 
-          const lossRecord: KomGainLossRecord = {
+          const lossRecord: KomTimeseriesRecord = {
             user: userId,
             segment_id: lostId,
             kom_effort: storedEffort.id,
@@ -188,7 +188,7 @@ export async function GET(req: Request) {
           let lossRecordRef
 
           try {
-            lossRecordRef = await pb.collection(Collections.KomGainLoss).create(lossRecord)
+            lossRecordRef = await pb.collection(Collections.KomTimeseries).create(lossRecord)
           } catch (error) {
             return errorResponse(`Error occured while creating a Loss Record (seg_id:${lostId})`, 513, error)
           }
@@ -234,7 +234,7 @@ export async function GET(req: Request) {
                   )
                 })
             )
-            const gainRecord: KomGainLossRecord = {
+            const gainRecord: KomTimeseriesRecord = {
               user: userId,
               segment_id: gainedId,
               kom_effort: storedEffort.id,
@@ -245,7 +245,7 @@ export async function GET(req: Request) {
             let gainRecordRef
 
             try {
-              gainRecordRef = await pb.collection(Collections.KomGainLoss).create(gainRecord)
+              gainRecordRef = await pb.collection(Collections.KomTimeseries).create(gainRecord)
             } catch (error) {
               return errorResponse(
                 `Error occured while creating an active Gain Record (seg_id:${gainedId})`,
@@ -311,7 +311,7 @@ export async function GET(req: Request) {
               )
             }
 
-            const gainRecord: KomGainLossRecord = {
+            const gainRecord: KomTimeseriesRecord = {
               user: userId,
               segment_id: seg_ref.segment_id,
               kom_effort: newKomEffort.id,
@@ -321,7 +321,7 @@ export async function GET(req: Request) {
 
             let gainRecordRef
             try {
-              gainRecordRef = await pb.collection(Collections.KomGainLoss).create(gainRecord)
+              gainRecordRef = await pb.collection(Collections.KomTimeseries).create(gainRecord)
             } catch (error) {
               return errorResponse(
                 `Error occured while creating an active Gain Record (seg_id:${seg_ref.segment_id})`,
