@@ -1,9 +1,8 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Loader } from "lucide-react"
+import { Area, AreaChart, CartesianGrid, ReferenceDot, XAxis, YAxis } from "recharts"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { use } from "react"
 
@@ -20,12 +19,11 @@ export function TotalKomChart({
   chartDataPromise: Promise<{ date: string; desktop: number }[]>
 }) {
   const chartData = use(chartDataPromise)
-  console.log(chartData)
   return (
-    <ChartContainer config={chartConfig} className="min-h-[200px] max-h-[400px] w-full">
+    <ChartContainer config={chartConfig} className="h-56 md:h-80 lg:h-[400px] w-full">
       <AreaChart margin={{ left: -20 }} accessibilityLayer data={chartData} height={200}>
         <CartesianGrid vertical={false} />
-        <XAxis dataKey="date" tickMargin={5} tickLine={false} axisLine={false} tickFormatter={formatDateAxis} />
+        <XAxis dataKey="date" dy={5} tickMargin={5} tickLine={false} axisLine={false} tickFormatter={formatDateAxis} />
         <YAxis
           type="number"
           tickFormatter={(value) => value.toLocaleString()}
@@ -50,6 +48,24 @@ export function TotalKomChart({
       </AreaChart>
     </ChartContainer>
   )
+}
+
+export function TotalKomChartLoading() {
+  const test1 = (
+    <ChartContainer config={chartConfig} className="h-56 md:h-80 lg:h-[400px] w-full">
+      <AreaChart margin={{ left: -20 }} accessibilityLayer height={200}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickMargin={5} tickLine={false} axisLine={false} tickFormatter={formatDateAxis} />
+        <YAxis type="number" tickFormatter={(value) => value.toLocaleString()} domain={[0, 100]} tickCount={5} />
+      </AreaChart>
+    </ChartContainer>
+  )
+  const test2 = (
+    <div className="h-[400px] w-full flex items-center justify-center">
+      <Loader className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  )
+  return test1
 }
 
 function formatDateAxis(tickItem: string) {

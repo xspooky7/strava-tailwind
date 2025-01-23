@@ -17,7 +17,8 @@ export const getKomTimeline = async (session: SessionData): Promise<{ date: stri
   const data = rawData.map((entry: RecordModel): { date: string; desktop: number } => {
     if (entry.status === "lost") current -= 1
     else current += 1
-    return { date: entry.created, desktop: current }
+    const splitDate = entry.created.split(" ")[0]
+    return { date: splitDate, desktop: current }
   })
   const reducedData = reduceToLastOfMonth(data)
   reducedData.unshift(data[0])

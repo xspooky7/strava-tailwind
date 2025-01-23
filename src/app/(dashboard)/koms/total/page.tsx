@@ -2,12 +2,11 @@ import { CustomTableSkeleton } from "@/components/table/table-skeleton"
 import { ColumnId, TableSegment } from "../../../../lib/types/types"
 import { Suspense } from "react"
 import { unstable_cache } from "next/cache"
-import { TotalKomChart } from "@/features/total/total-kom-chart"
+import { TotalKomChart, TotalKomChartLoading } from "@/features/total/total-kom-chart"
 import { verifySession } from "@/app/auth/actions/verify-session"
 import { getTotalSegments } from "@/features/total/server/get-total-segments"
 import { SegmentTable } from "@/components/table/table"
 import { getKomTimeline } from "@/features/total/server/get-kom-timeline"
-import { Spinner } from "@/components/spinner"
 import { Separator } from "@/components/ui/separator"
 
 const getCachedTotalSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"], {
@@ -30,7 +29,7 @@ const KomTotalPage = async () => {
 
   return (
     <div className="px-5 py-5 space-y-6">
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={<TotalKomChartLoading />}>
         <TotalKomChart chartDataPromise={komTimeline} />
       </Suspense>
       <Separator className="w-full opacity-30" />
