@@ -93,6 +93,13 @@ const tasks: Feature[] = [
         sprint: 5,
         category: "Backend",
       },
+      {
+        id: "bug1e",
+        check: false,
+        label: "Starred Segments falsely saved as actively acquired even if it's passive",
+        sprint: 2,
+        category: "Bug",
+      },
     ],
   },
   {
