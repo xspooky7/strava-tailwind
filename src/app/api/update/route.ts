@@ -257,7 +257,7 @@ export async function GET(req: Request) {
 
             order.push({ ref_id: gainRecordRef.id, segment_id: gainedId, status: "gained", gender: userGender })
           } else {
-            let seg_ref,
+            let seg_ref: SegmentRecord,
               segment: SegmentRecord | null = null
             let passive = true
             try {
@@ -286,8 +286,10 @@ export async function GET(req: Request) {
                 return errorResponse(`Error occured while creating a new Segment on the database`, 516, error, gainedId)
               }
             }
-
-            passive = new Date().getTime() - new Date(seg_ref.created_at!).getTime() > ACTIVELY_ACQUIRED_KOM_THRESHOLD
+            const timeNow = new Date().getTime()
+            const timeCreated = new Date(seg_ref.created_at!).getTime()
+            passive = timeNow - timeCreated > ACTIVELY_ACQUIRED_KOM_THRESHOLD
+            log(`[DEBUG] Time now ${timeNow}ms, time created ${timeCreated}ms, passive:${passive}`)
 
             log(`[DATABASE] Creating Kom Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
             const newEffort: KomEffortRecord = {
