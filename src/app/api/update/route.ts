@@ -238,7 +238,7 @@ export async function GET(req: Request) {
               user: userId,
               segment_id: gainedId,
               kom_effort: storedEffort.id,
-              status: "gained_active",
+              status: "gained",
               user_effort: detailRecord.id,
             }
 
@@ -259,7 +259,6 @@ export async function GET(req: Request) {
           } else {
             let seg_ref: SegmentRecord,
               segment: SegmentRecord | null = null
-            let passive = true
             try {
               log(`[DATABASE] Trying to fetch Segment (seg_id: ${gainedId})`)
               seg_ref = await pb.collection(Collections.Segments).getFirstListItem(`segment_id="${gainedId}"`)
@@ -288,7 +287,7 @@ export async function GET(req: Request) {
             }
             const timeNow = new Date().getTime()
             const timeCreated = new Date(seg_ref.created_at!).getTime()
-            passive = timeNow - timeCreated > ACTIVELY_ACQUIRED_KOM_THRESHOLD
+            const passive = timeNow - timeCreated > ACTIVELY_ACQUIRED_KOM_THRESHOLD
             log(`[DEBUG] Time now ${timeNow}ms, time created ${timeCreated}ms, passive:${passive}`)
 
             log(`[DATABASE] Creating Kom Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
@@ -317,7 +316,7 @@ export async function GET(req: Request) {
               user: userId,
               segment_id: seg_ref.segment_id,
               kom_effort: newKomEffort.id,
-              status: passive ? "gained_passive" : "gained_active",
+              status: passive ? "created" : "gained",
               user_effort: detailRecord.id,
             }
 
