@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     log("[DATABASE] Fetching Kom Effort Collection")
     const userEfforts: KomEffortRecord[] = await pb.collection(Collections.KomEfforts).getFullList({
       filter: `user="${userId}"`,
-      fields: "segment_id, id, has_kom, is_starred",
+      fields: "segment_id,id,has_kom,is_starred,pr_effort",
       cache: "no-store",
     })
     const ownedKomIds: Set<number> = userEfforts
@@ -287,8 +287,8 @@ export async function GET(req: Request) {
             }
             const timeNow = new Date().getTime()
             const timeCreated = new Date(seg_ref.created_at!).getTime()
-            const passive = timeNow - timeCreated > ACTIVELY_ACQUIRED_KOM_THRESHOLD
-            log(`[DEBUG] Time now ${timeNow}ms, time created ${timeCreated}ms, passive:${passive}`)
+            const active = timeNow - timeCreated > ACTIVELY_ACQUIRED_KOM_THRESHOLD
+            log(`[DEBUG] Time now ${timeNow}ms, time created ${timeCreated}ms, active:${active}`)
 
             log(`[DATABASE] Creating Kom Effort Record (seg_id:${gainedId}, seg_ref:${seg_ref.id})`)
             const newEffort: KomEffortRecord = {
@@ -316,7 +316,7 @@ export async function GET(req: Request) {
               user: userId,
               segment_id: seg_ref.segment_id,
               kom_effort: newKomEffort.id,
-              status: passive ? "created" : "gained",
+              status: active ? "gained" : "created",
               user_effort: detailRecord.id,
             }
 
@@ -332,7 +332,7 @@ export async function GET(req: Request) {
             }
             log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${seg_ref.segment_id})`)
 
-            if (!passive) {
+            if (active) {
               order.push({
                 ref_id: gainRecordRef.id,
                 segment_id: seg_ref.segment_id,
