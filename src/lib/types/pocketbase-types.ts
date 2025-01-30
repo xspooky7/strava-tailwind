@@ -4,7 +4,7 @@
 
 import type PocketBase from "pocketbase"
 import type { RecordService } from "pocketbase"
-import { Coordinate, Label, Line } from "./types"
+import { Coordinate, Label, Line, Status } from "./types"
 
 export enum Collections {
   EffortDetails = "effort_details",
@@ -13,6 +13,7 @@ export enum Collections {
   Users = "users",
   KomTimeseries = "kom_timeseries",
   UserTokens = "user_tokens",
+  Opponents = "opponents",
 }
 
 // Alias types for improved usability
@@ -58,8 +59,15 @@ export type UserTokenRecord = {
   expires_at: IsoDateString
 }
 
+export type OpponentsRecord = {
+  id?: RecordIdString
+  athlete_id: number
+  name: string
+  pfp_url: string
+}
+
 export type KomEffortRecord = {
-  id?: string
+  id?: RecordIdString
   pr_effort?: RecordIdString
   user: RecordIdString
   segment: RecordIdString
@@ -74,13 +82,14 @@ export type KomTimeseriesRecord = {
   id?: RecordIdString
   user: RecordIdString
   segment_id?: number
-  status: "gained_active" | "gained_passive" | "lost"
+  status: Status
   opponent_name?: string
   opponent_id?: number
   kom_effort?: RecordIdString
   opponent_effort?: RecordIdString
   user_effort?: RecordIdString
   opponent_pfp_url?: string
+  opponent?: RecordIdString
 }
 
 export type SegmentRecord = {

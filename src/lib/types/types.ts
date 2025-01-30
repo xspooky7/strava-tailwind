@@ -1,3 +1,5 @@
+import { OpponentsRecord } from "./pocketbase-types"
+
 export interface Line {
   start: Coordinate
   end: Coordinate
@@ -11,8 +13,20 @@ export type Coordinate = {
   lat: number
   lon: number
 }
+export type Status = "gained" | "claimed" | "lost" | "deleted" | "created"
 
-export type ColumnId = "name" | "city" | "actions" | "label" | "terrain" | "star" | "status" | "kom" | "tailwind"
+export type ColumnId =
+  | "name"
+  | "city"
+  | "actions"
+  | "label"
+  | "terrain"
+  | "star"
+  | "date"
+  | "opponent"
+  | "status"
+  | "kom"
+  | "tailwind"
 export type Label =
   | "Hazardous"
   | "Circuit"
@@ -41,7 +55,8 @@ export interface TableSegment {
   average_grade: number
   labels?: Label[]
   //delta
-  status?: "gained_active" | "gained_passive" | "lost"
+  opponent?: OpponentsRecord
+  status?: Status
   created?: Date
   //tailwind
   profile_url?: string
