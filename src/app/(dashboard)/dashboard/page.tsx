@@ -1,12 +1,11 @@
-import { Separator } from "@/components/ui/separator"
-import { StatusChart } from "@/features/charts/status-chart"
+import { GainLossChart } from "@/features/dashboard/components/gain-loss-chart"
+import { ProgressBoxes } from "@/features/dashboard/components/progress-boxes"
 
 const DashboradPage = async () => {
   return (
-    <div className="h-full w-full px-5">
-      <h1 className="text-2xl font-bold">Welcome Back, Sport Angie</h1>
-      <p className="text-sm text-muted-foreground">Let's see what changed since your last visit</p>
-      <Separator className="my-4 flex-none" />
+    <div className="grid px-5 w-full grid-cols-12 gap-2 lg:gap-3 xl:gap-5 grid-rows-none">
+      <ProgressBoxes />
+      <GainLossChart />
     </div>
   )
 }

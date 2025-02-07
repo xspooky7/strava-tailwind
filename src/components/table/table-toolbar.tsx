@@ -12,18 +12,36 @@ import { usePathname } from "next/navigation"
 import { DataTableViewOptions } from "./data-table-view-option"
 import { revalidate } from "@/lib/revalidate-path"
 import { RefObject } from "react"
+import { DateRangePicker } from "../date-range-picker/date-range-picker"
+import { DateRange } from "../date-range-picker/types"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   ref?: RefObject<HTMLInputElement | null>
+  opponents?: string[]
 }
 
-export function TableToolbar<TData>({ table, ref }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+export function TableToolbar<TData>({ table, ref, opponents }: DataTableToolbarProps<TData>) {
+  const labelFilterActive = table.getState().columnFilters.find((filter) => filter.id === "label")
+  const statusFilter = table.getState().columnFilters.find((filter) => filter.id === "")
   const path = usePathname()
 
   const handleScrollIntoView = (event: React.MouseEvent<HTMLInputElement>) => {
     event.currentTarget.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  const filterByDate = (range: DateRange) => {
+    table.setColumnFilters((prevFilters) => [
+      ...prevFilters.filter((filter) => filter.id !== "date"),
+      {
+        id: "date",
+        value: range,
+      },
+    ])
+  }
+
+  const resetLabelFilter = () => {
+    table.setColumnFilters((prevFilters) => [...prevFilters.filter((filter) => filter.id !== "label")])
   }
 
   return (
@@ -56,14 +74,17 @@ export function TableToolbar<TData>({ table, ref }: DataTableToolbarProps<TData>
         {table.getColumn("label") && (
           <TableFacetedFilter column={table.getColumn("label")} title="Label" options={labels} />
         )}
-        {isFiltered && (
-          <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
+        {labelFilterActive && (
+          <Button variant="ghost" onClick={resetLabelFilter} className="h-8 px-2 lg:px-3">
             Reset
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      <div className="flex space-x-2">
+        <DateRangePicker onUpdate={filterByDate} />
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   )
 }

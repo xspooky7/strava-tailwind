@@ -18,29 +18,32 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "./table-pagination"
 import { TableToolbar } from "./table-toolbar"
-import { ColumnId, TableSegment } from "../../lib/types/types"
+import { ColumnId, TableSegment } from "@/lib/types/types"
 import { getColumn } from "@/lib/get-column"
 
 interface DataTableProps {
   columnLayout: Partial<{ [key in ColumnId]: boolean }>
   tableSegments: TableSegment[]
   sort: string
+  meta: string
 }
 
 export const SegmentTable = ({
   columnLayout,
   promises,
   sort,
+  meta,
 }: {
   promises: Promise<any>
   columnLayout: Partial<{ [key in ColumnId]: boolean }>
   sort: string
+  meta: string
 }) => {
   const data = React.use(promises)
-  return <SegmentTableUse columnLayout={columnLayout} tableSegments={data} sort={sort} />
+  return <SegmentTableUse columnLayout={columnLayout} tableSegments={data} sort={sort} meta={meta} />
 }
 
-function SegmentTableUse({ columnLayout, tableSegments, sort }: DataTableProps) {
+function SegmentTableUse({ columnLayout, tableSegments, sort, meta }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(columnLayout)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -57,6 +60,7 @@ function SegmentTableUse({ columnLayout, tableSegments, sort }: DataTableProps) 
   const table = useReactTable({
     data,
     columns,
+    meta,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -84,10 +88,17 @@ function SegmentTableUse({ columnLayout, tableSegments, sort }: DataTableProps) 
 
   const ref = React.useRef<HTMLInputElement>(null)
 
+  let uniqueOpponents: string[] | undefined = undefined
+  if (meta === "delta") {
+    uniqueOpponents = [
+      ...new Set(data.filter((segment) => segment.opponent !== undefined).map((segment) => segment.opponent!.name)),
+    ]
+  }
+
   return (
     <div className="space-y-4">
-      <TableToolbar table={table} ref={ref} />
-      <div className="rounded-md border bg-card">
+      <TableToolbar table={table} ref={ref} opponents={uniqueOpponents} />
+      <div className="max-w-full rounded-md border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

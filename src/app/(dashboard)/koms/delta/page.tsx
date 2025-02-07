@@ -15,17 +15,18 @@ export default async function DeltaKomPage() {
   const data = getCachedDeltaSegments(session)
 
   const columnLayout: Partial<{ [key in ColumnId]: boolean }> = {
-    star: true,
     name: true,
     city: true,
     terrain: false,
     label: false,
+    opponent: true,
     status: true,
+    date: true,
     actions: true,
   }
 
   return (
-    <div className="px-5 py-5 md:px-4">
+    <div className="py-5 md:px-2 lg:px-4">
       <Suspense
         fallback={
           <CustomTableSkeleton
@@ -36,7 +37,7 @@ export default async function DeltaKomPage() {
           />
         }
       >
-        <SegmentTable promises={data} columnLayout={columnLayout} sort="status" />
+        <SegmentTable promises={data} columnLayout={columnLayout} sort="date" meta="delta" />
       </Suspense>
     </div>
   )

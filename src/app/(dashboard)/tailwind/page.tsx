@@ -37,7 +37,7 @@ export default async function TailwindPage() {
           />
         }
       >
-        <SegmentTable columnLayout={columnLayout} promises={promises} sort="tailwind" />
+        <SegmentTable columnLayout={columnLayout} promises={promises} sort="tailwind" meta="tailwind" />
       </Suspense>
     </div>
   )

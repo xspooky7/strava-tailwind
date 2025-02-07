@@ -18,7 +18,52 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog"
+import LabelsTooltip from "../label-tooltip"
+import { ColumnHelper } from "@tanstack/react-table"
 
+export type SharedData = {
+  id: string
+  name: string
+  city: string
+  terrain: string
+  labels: Label[]
+}
+
+export function createSharedColumns<T extends SharedData>(columnHelper: ColumnHelper<T>) {
+  return [
+    columnHelper.accessor((x) => x.name, {
+      id: "name",
+      filterFn: (row, id: string, filterValue: string) =>
+        row.original.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+        row.original.city.toLowerCase().includes(filterValue.toLowerCase()),
+      header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
+      cell: ({ row }) => {
+        const labels = row.original.labels
+        const name = row.original.name
+
+        return (
+          <div className="flex flex-wrap gap-2 items-center md:flex-nowrap">
+            {labels && labels.length > 0 && <LabelsTooltip labels={labels} />}
+            <div className="xl:flex hidden flex-wrap gap-2 ">
+              {labels &&
+                labels.map((c: Label) => (
+                  <Badge
+                    key={c}
+                    variant="outline"
+                    className="text-primary bg-card dark:text-secondary border-primary dark:border-secondary"
+                  >
+                    {c}
+                  </Badge>
+                ))}
+            </div>
+
+            <span className="font-medium">{name}</span>
+          </div>
+        )
+      },
+    }),
+  ]
+}
 export const sharedColumns: Record<string, ColumnDef<TableSegment>> = {
   name: {
     id: "name",
@@ -29,19 +74,25 @@ export const sharedColumns: Record<string, ColumnDef<TableSegment>> = {
     header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => {
       const labels = row.original.labels
+      const name = row.original.name
+
       return (
-        <div className="flex space-x-2">
-          {labels &&
-            labels.slice(0, 2).map((c: Label) => (
-              <Badge
-                key={c}
-                variant="outline"
-                className="text-primary dark:text-secondary border-primary dark:border-secondary"
-              >
-                {c}
-              </Badge>
-            ))}
-          <span className="max-w-[500px] truncate font-medium">{row.original.name}</span>
+        <div className="flex flex-wrap gap-2 items-center md:flex-nowrap">
+          {labels && labels.length > 0 && <LabelsTooltip labels={labels} />}
+          <div className="xl:flex hidden flex-wrap gap-2 ">
+            {labels &&
+              labels.map((c: Label) => (
+                <Badge
+                  key={c}
+                  variant="outline"
+                  className="text-primary bg-card dark:text-secondary border-primary dark:border-secondary"
+                >
+                  {c}
+                </Badge>
+              ))}
+          </div>
+
+          <span className="font-medium">{name}</span>
         </div>
       )
     },
@@ -100,7 +151,7 @@ export const sharedColumns: Record<string, ColumnDef<TableSegment>> = {
             <div className="flex justify-center items-center cursor-pointer group">
               <StarIcon
                 className={
-                  "h-5 w-5 translate-y-[2px]  cursor-pointer" +
+                  "h-5 w-5 translate-y-[2px] cursor-pointer" +
                   (starred
                     ? " text-amber-400 fill-amber-400 group-hover:text-muted group-hover:fill-transparent"
                     : " text-muted group-hover:text-amber-400 group-hover:fill-amber-400")

@@ -63,7 +63,7 @@ export type OpponentsRecord = {
   id?: RecordIdString
   athlete_id: number
   name: string
-  pfp_url: string
+  avatar: string
 }
 
 export type KomEffortRecord = {
@@ -90,6 +90,7 @@ export type KomTimeseriesRecord = {
   user_effort?: RecordIdString
   opponent_pfp_url?: string
   opponent?: RecordIdString
+  created?: string
 }
 
 export type SegmentRecord = {
@@ -143,6 +144,7 @@ export type CollectionRecords = {
   kom_efforts: KomEffortRecord
   segments: SegmentRecord
   users: UserRecord
+  kom_timeseries: KomTimeseriesRecord
 }
 
 export type CollectionResponses = {

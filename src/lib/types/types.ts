@@ -13,8 +13,14 @@ export type Coordinate = {
   lat: number
   lon: number
 }
-export type Status = "gained" | "claimed" | "lost" | "deleted" | "created"
+type ColumnRegistry = {
+  delta: "name" | "city" | "terrain" | "label" | "opponent" | "status" | "date" | "actions"
+  total: "name" | "city" | "terrain" | "label" | "actions"
+  tailwind: "kom" | "name" | "city" | "terrain" | "label" | "tailwind" | "actions"
+}
 
+export type Status = "gained" | "claimed" | "lost" | "deleted" | "created" | "restored"
+export type TableId = "delta" | "total" | "tailwind"
 export type ColumnId =
   | "name"
   | "city"
@@ -27,6 +33,7 @@ export type ColumnId =
   | "status"
   | "kom"
   | "tailwind"
+
 export type Label =
   | "Hazardous"
   | "Circuit"

@@ -6,6 +6,20 @@ import { ColumnDef } from "@tanstack/react-table"
 import { deltaColumns } from "@/features/delta/columns"
 import { tailwindColumns } from "@/features/tailwind/columns"
 
+export function getColumns(tableId: "total" | "delta" | "tailwind") {
+  switch (tableId) {
+    case "delta":
+      return {
+        star: true,
+        name: true,
+        city: true,
+        terrain: false,
+        label: false,
+        status: true,
+        actions: true,
+      }
+  }
+}
 export function getColumn(id: ColumnId): ColumnDef<TableSegment> {
   switch (id) {
     case "name":
@@ -22,6 +36,10 @@ export function getColumn(id: ColumnId): ColumnDef<TableSegment> {
       return sharedColumns.star
     case "status":
       return deltaColumns.status
+    case "date":
+      return deltaColumns.date
+    case "opponent":
+      return deltaColumns.opponent
     case "kom":
       return tailwindColumns.kom
     case "tailwind":

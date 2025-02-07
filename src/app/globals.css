@@ -95,6 +95,18 @@ html :root {
 
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --success: 134.74 75.9% 40.2%;
+    --success-foreground: 210 40% 98%;
+    --warning: 45 90% 55%;
+    --warning-foreground: 234.55 17.46% 12.35%;
+
+    --restore: 340 80% 70%; /* Bright magenta-pink */
+    --restore-foreground: 210 40% 98%;
+
+    --info: 200 85% 65%; /* Bright sky blue */
+
+    --infopink: 340 80% 70%;
   }
 
   .CollapsibleContent {

@@ -11,6 +11,7 @@ import {
 import pb from "@/lib/pocketbase"
 import { fetchNewSegmentRecord, getStravaToken } from "@/lib/strava"
 import { ACTIVELY_ACQUIRED_KOM_THRESHOLD } from "@/lib/constants"
+import { checkIfRestored, DEBUG_LOG, errorResponse, log } from "./utils"
 
 interface Order {
   ref_id: string
@@ -20,10 +21,8 @@ interface Order {
 }
 export const maxDuration = 60 // vercel
 
-let DEBUG_LOG = ""
 let STRAVA_REQUEST_COUNT = 0
 export async function GET(req: Request) {
-  DEBUG_LOG = ""
   STRAVA_REQUEST_COUNT = 0
   try {
     const headersList = await headers()
@@ -234,11 +233,13 @@ export async function GET(req: Request) {
                   )
                 })
             )
+            const restored = await checkIfRestored(gainedId)
+
             const gainRecord: KomTimeseriesRecord = {
               user: userId,
               segment_id: gainedId,
               kom_effort: storedEffort.id,
-              status: "gained",
+              status: restored ? "restored" : "gained",
               user_effort: detailRecord.id,
             }
 
@@ -255,7 +256,9 @@ export async function GET(req: Request) {
             }
             log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${gainedId})`)
 
-            order.push({ ref_id: gainRecordRef.id, segment_id: gainedId, status: "gained", gender: userGender })
+            if (!restored) {
+              order.push({ ref_id: gainRecordRef.id, segment_id: gainedId, status: "gained", gender: userGender })
+            }
           } else {
             let seg_ref: SegmentRecord,
               segment: SegmentRecord | null = null
@@ -436,21 +439,4 @@ async function sendOrder(order: Order[]) {
   } catch (error) {
     log(`[WARNING] GCloud Error`)
   }
-}
-
-//Helper
-const log = (message: string, newline = true, payload?: object) => {
-  console.log(message)
-  DEBUG_LOG += `${message}${newline ? "\n" : ""}`
-}
-
-const errorResponse = (message: string, status = 400, error?: any, ...params: any[]) => {
-  return new NextResponse(
-    `[ERROR ${status}] ${message} \n\n -ERROR: ${
-      error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : "-"
-    } \n\n -LOG: ${DEBUG_LOG}  \n\n -PARAMS: ${JSON.stringify(params)}`,
-    {
-      status: status,
-    }
-  )
 }

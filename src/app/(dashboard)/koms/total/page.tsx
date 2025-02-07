@@ -43,7 +43,7 @@ const KomTotalPage = async () => {
           />
         }
       >
-        <SegmentTable promises={totalKoms} columnLayout={columnLayout} sort="name" />
+        <SegmentTable promises={totalKoms} columnLayout={columnLayout} sort="name" meta="total" />
       </Suspense>
     </div>
   )

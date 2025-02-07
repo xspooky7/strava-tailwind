@@ -11,9 +11,14 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
   pb.authStore.save(session.pbAuth)
   const data = await pb.collection(Collections.KomTimeseries).getFullList({
     filter: "created > '2024-12-31 23:59:59'",
-    expand: "kom_effort, kom_effort.segment",
+    expand: "opponent,kom_effort,kom_effort.segment",
     fields: `status,
       created,
+      expand.opponent.name,
+      expand.opponent.athlete_id,
+      expand.opponent.avatar,
+      expand.opponent.collectionId,
+      expand.opponent.id,
       expand.kom_effort.segment_id,
       expand.kom_effort.has_kom,
       expand.kom_effort.is_starred,
@@ -28,6 +33,15 @@ export const getDeltaSegments = async (session: SessionData): Promise<TableSegme
   return data.map((d) => ({
     status: d.status,
     created: new Date(d.created),
+    opponent: d.expand!.opponent
+      ? {
+          name: d.expand!.opponent.name,
+          athlete_id: d.expand!.opponent.athlete_id,
+          avatar: `${process.env.PB_URL}/api/files/${d.expand!.opponent.collectionId}/${d.expand!.opponent.id}/${
+            d.expand!.opponent.avatar
+          }`,
+        }
+      : undefined,
     segment_id: d.expand!.kom_effort.segment_id,
     is_starred: d.expand!.kom_effort.is_starred,
     has_kom: d.expand!.kom_effort.has_kom,

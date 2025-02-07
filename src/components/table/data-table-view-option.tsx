@@ -20,9 +20,9 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex">
+        <Button variant="outline" size="sm" className="ml-auto h-8 lg:flex">
           <Settings2Icon />
-          View
+          <span className="hidden md:block">View</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[150px]">
@@ -37,7 +37,9 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
                 key={column.id}
                 className="capitalize"
                 checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                onCheckedChange={(value) => {
+                  column.toggleVisibility(!!value)
+                }}
               >
                 {column.id}
               </DropdownMenuCheckboxItem>
