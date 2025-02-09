@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["d3o5xota0a1fcr.cloudfront.net"],
+    domains: ["http://195.201.112.203/"],
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
