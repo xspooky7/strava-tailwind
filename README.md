@@ -1,6 +1,7 @@
+![Project Preview](https://imgur.com/a/Gw9PibH)
+
 **KomQuest** supplements strava's non-existant KOM-tracking with in-depth tables and visualisations. It also offers a tailwind analysis for starred segments to help score new KOMs.
 
----
 
 ## 🚀 Key Features
 
@@ -9,7 +10,6 @@
 - **Tailwind Analysis**: Fetches all currently starred segments from Strava and calculates the percentage of tailwind they have.
 - **Insightful Charts**: Visualize trends and statistics with interactive charts.
 
----
 
 ## 🛠️ Tech Stack
 
@@ -17,5 +17,4 @@
 - **Backend**: Self-hosted PocketBase instance
 - **APIs**: Strava API integration
 
----
 
