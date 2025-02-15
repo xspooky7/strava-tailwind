@@ -8,13 +8,28 @@ html :root {
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .delay-100 {
+    animation-delay: 100ms;
   }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  .delay-700 {
+    animation-delay: 700ms;
+  }
+  .delay-1000 {
+    animation-delay: 1000ms;
+  }
+}
+.text-balance {
+  text-wrap: balance;
 }
 
 @layer base {
   :root {
+    --brand: 27 96% 61%;
+    --brand-foreground: 31 97% 72%;
+
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96.1%;
@@ -52,6 +67,9 @@ html :root {
   }
 
   .dark {
+    --brand: 225.45 71.22% 72.75%;
+    --brand-foreground: 234.55 17.46% 12.35%;
+
     --background: 240 13.73% 10%;
     --foreground: 229.76 31.78% 74.71%;
     --muted: 232.5 15.44% 18.32%;
