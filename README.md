@@ -1,4 +1,4 @@
-![Project Preview](https://imgur.com/a/Gw9PibH)
+![Project Preview](https://i.imgur.com/ayAI8s2.png)
 
 **KomQuest** supplements strava's non-existant KOM-tracking with in-depth tables and visualisations. It also offers a tailwind analysis for starred segments to help score new KOMs.
 
