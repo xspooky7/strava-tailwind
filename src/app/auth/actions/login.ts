@@ -28,7 +28,7 @@ export const login = async (prevState: { error: null | boolean }, formData: Form
     session.athleteId = userModel.athlete_id
 
     await session.save()
-    redirectPath = "/dashboard"
+    redirectPath = "/koms/delta"
   } catch (err) {
     return true
   }

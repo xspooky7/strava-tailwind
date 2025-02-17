@@ -16,8 +16,8 @@ import { SidebarData } from "./types"
 
 export const sidebarData: SidebarData = {
   user: {
-    name: "Sporty Angie",
-    email: "nosey-angie@example.com",
+    name: "Demo User",
+    email: "demo-user@example.com",
     avatar: "https://dgalywyr863hv.cloudfront.net/pictures/athletes/21856708/12405558/1/large.jpg",
   },
   navGroups: [
