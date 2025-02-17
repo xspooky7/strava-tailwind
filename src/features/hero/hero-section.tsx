@@ -1,18 +1,13 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRightIcon } from "lucide-react"
 import Image from "next/image"
-import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { Mockup, MockupFrame } from "./components/mockup"
 import { Glow } from "./components/glow"
 import { Icons } from "@/components/icons"
 
 export function HeroSection() {
-  const { resolvedTheme } = useTheme()
-
   const badge = {
     text: "Introducing our new components",
     action: {
@@ -26,12 +21,7 @@ export function HeroSection() {
 
   const githubUrl = "https://github.com/xspooky7/strava-tailwind/"
 
-  const image = {
-    light: "/images/hero-preview.png",
-    dark: "/images/hero-preview.png",
-    alt: "UI Components Preview",
-  }
-  const imageSrc = resolvedTheme === "light" ? image.light : image.dark
+  const imageSrc = "/images/hero-preview.png"
   return (
     <section className={cn("bg-background text-foreground", "p-4", "fade-bottom overflow-hidden pb-0")}>
       <div className="mx-auto flex max-w-container flex-col gap-12 pt-16 sm:gap-24">
@@ -74,7 +64,7 @@ export function HeroSection() {
           <div className="relative pt-12">
             <MockupFrame className="animate-appear opacity-0 delay-700" size="small">
               <Mockup type="responsive">
-                <Image src={imageSrc} alt={image.alt} width={1248} height={765} priority />
+                <Image src={imageSrc} alt="Preview" width={1248} height={765} priority />
               </Mockup>
             </MockupFrame>
             <Glow variant="top" className="animate-appear-zoom opacity-0 delay-1000" />
