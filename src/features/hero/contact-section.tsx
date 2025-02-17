@@ -82,7 +82,7 @@ export function ContactSection() {
     )
 
   return (
-    <section className="mx-5 mb-5 border-card rounded-xl p-8 md:px-20 mt-20 bg-card">
+    <section id="contact" className="mx-5 mb-5 border-card rounded-xl p-8 md:px-20 mt-20 bg-card">
       <div className="grid md:grid-cols-2 gap-12">
         <div className="space-y-8 order-2 md:order-1">
           <div className="space-y-4">
