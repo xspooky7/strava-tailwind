@@ -10,31 +10,6 @@ import { Mockup, MockupFrame } from "./components/mockup"
 import { Glow } from "./components/glow"
 import { Icons } from "@/components/icons"
 
-interface HeroAction {
-  text: string
-  href: string
-  icon?: React.ReactNode
-  variant?: "default" | "ghost"
-}
-
-interface HeroProps {
-  badge?: {
-    text: string
-    action: {
-      text: string
-      href: string
-    }
-  }
-  title: string
-  description: string
-  actions: HeroAction[]
-  image: {
-    light: string
-    dark: string
-    alt: string
-  }
-}
-
 export function HeroSection() {
   const { resolvedTheme } = useTheme()
 
