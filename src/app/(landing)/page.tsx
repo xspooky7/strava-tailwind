@@ -1,6 +1,7 @@
 "use client"
 
 import { Icons } from "@/components/icons"
+import { ContactSection } from "@/features/hero/contact-section"
 import { HeroSection } from "@/features/hero/hero-section"
 import { LoginDrawer } from "@/features/hero/login-drawer"
 
@@ -39,6 +40,7 @@ export default function LandingPage() {
           alt: "UI Components Preview",
         }}
       />
+      <ContactSection />
     </>
   )
 }

@@ -14,6 +14,7 @@ export enum Collections {
   KomTimeseries = "kom_timeseries",
   UserTokens = "user_tokens",
   Opponents = "opponents",
+  ContactForm = "contact_form",
 }
 
 // Alias types for improved usability
@@ -64,6 +65,13 @@ export type OpponentsRecord = {
   athlete_id: number
   name: string
   avatar: string
+}
+
+export type ContactFormRecord = {
+  id?: RecordIdString
+  username: string
+  email: string
+  text: string
 }
 
 export type KomEffortRecord = {

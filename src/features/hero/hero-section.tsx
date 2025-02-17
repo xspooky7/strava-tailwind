@@ -8,6 +8,7 @@ import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { Mockup, MockupFrame } from "./components/mockup"
 import { Glow } from "./components/glow"
+import { LoginDrawer } from "./login-drawer"
 
 interface HeroAction {
   text: string
@@ -39,7 +40,7 @@ export function HeroSection({ badge, title, description, actions, image }: HeroP
   const imageSrc = resolvedTheme === "light" ? image.light : image.dark
 
   return (
-    <section className={cn("bg-background text-foreground", "py-4 px-4 lg:px-24", "fade-bottom overflow-hidden pb-0")}>
+    <section className={cn("bg-background text-foreground", "p-4", "fade-bottom overflow-hidden pb-0")}>
       <div className="mx-auto flex max-w-container flex-col gap-12 pt-16 sm:gap-24">
         <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
           {/* Badge
@@ -54,7 +55,7 @@ export function HeroSection({ badge, title, description, actions, image }: HeroP
           )} */}
 
           {/* Title */}
-          <h1 className="relative z-10 inline-block animate-appear bg-gradient-to-r from-primary to-muted-foreground bg-clip-text text-4xl font-semibold leading-tight text-transparent drop-shadow-2xl sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
+          <h1 className="lg:mx-20 relative z-10 inline-block animate-appear bg-gradient-to-r from-primary to-muted-foreground bg-clip-text text-4xl font-semibold leading-tight text-transparent drop-shadow-2xl sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
             {title}
           </h1>
 

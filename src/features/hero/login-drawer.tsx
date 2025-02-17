@@ -24,7 +24,7 @@ export function LoginDrawer() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button className="text-primary border-primary m-2 md:m-4 lg:m-6" variant="outline">
+        <Button className="animate-appear text-primary border-primary m-2 md:m-4 lg:m-6" variant="outline">
           Login
         </Button>
       </DrawerTrigger>
@@ -32,7 +32,7 @@ export function LoginDrawer() {
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle className="text-primary">Login</DrawerTitle>
-            <DrawerDescription>Please login again to continue using the application.</DrawerDescription>
+            <DrawerDescription>Please login to access the application.</DrawerDescription>
           </DrawerHeader>
           <form className="grid gap-4 p-4" action={formLogin}>
             <div className="grid gap-2">

@@ -2,11 +2,11 @@
 
 import { ColumnDef, Row } from "@tanstack/react-table"
 import { TableColumnHeader } from "@/components/table/table-column-header"
-import { DeleteIcon, FlagIcon, MedalIcon, PencilLineIcon, RotateCwIcon, XIcon } from "lucide-react"
+import { FlagIcon, MedalIcon, PencilLineIcon, RotateCwIcon, Trash2Icon, XIcon } from "lucide-react"
 import { TableSegment } from "@/lib/types/types"
 import { DateRange } from "@/components/date-range-picker/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import StatusTooltip from "@/components/status-tooltip"
+import StatusTooltip from "@/features/delta/components/status-tooltip"
 
 export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
   date: {
@@ -63,7 +63,7 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
               title="Deleted"
               description="by strava or the creator"
               color="text-destructive"
-              icon={DeleteIcon}
+              icon={Trash2Icon}
             />
           )
         case "restored":
@@ -105,37 +105,3 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
 const getDateFromRow = (row: Row<TableSegment>): number => {
   return new Date(row.original.created!).getTime()
 }
-
-/*status: {
-    id: "status",
-    accessorKey: "status",
-    header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
-    sortingFn: (rowA, rowB, columnId) => getDateFromRow(rowA) - getDateFromRow(rowB),
-    filterFn: (row, columnId, filterValue) => {
-      const rowDate = new Date(getDateFromRow(row))
-      const { from, to } = filterValue as DateRange
-
-      // Check if the date is within the specified range
-      const isAfterFrom = from ? rowDate >= new Date(from) : true
-      const isBeforeTo = to ? rowDate <= new Date(to) : true
-
-      return isAfterFrom && isBeforeTo
-    },
-    cell: ({ row }) => {
-      const createdDateString = new Date(row.original.created!).toDateString().slice(4)
-      const bubble =
-        row.original.status !== "lost" ? (
-          <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
-            <CirclePlusIcon className="mr-2 h-4 w-4 text-[#28A745]" />
-            <span className="text-[#28A745]">{createdDateString}</span>
-          </div>
-        ) : (
-          <div className="flex min-w-[110px] py-1 items-center rounded-xl ">
-            <CircleMinusIcon className="mr-2 h-4 w-4 text-destructive" />
-            <span className="text-destructive">{createdDateString}</span>
-          </div>
-        )
-
-      return <div className="flex items-center">{bubble}</div>
-    },
-  },*/
