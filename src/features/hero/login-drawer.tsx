@@ -1,6 +1,7 @@
 "use client"
 
 import { login } from "@/app/auth/actions/login"
+import { Spinner } from "@/components/spinner"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { useActionState } from "react"
 
 export function LoginDrawer() {
-  const [state, formLogin] = useActionState<any, FormData>(login, null)
+  const [state, formLogin, isPending] = useActionState<any, FormData>(login, null)
   const inputClass = state ? "border-destructive" : ""
 
   return (
@@ -40,6 +41,7 @@ export function LoginDrawer() {
               <Input
                 className={inputClass}
                 required
+                disabled={isPending}
                 id="username"
                 name="username"
                 type="text"
@@ -53,6 +55,7 @@ export function LoginDrawer() {
               <Input
                 className={inputClass}
                 required
+                disabled={isPending}
                 id="password"
                 name="password"
                 type="password"
@@ -63,9 +66,12 @@ export function LoginDrawer() {
             </div>
 
             <DrawerFooter className="px-0">
-              <Button type="submit">Login</Button>
+              <Button className="flex items-center justify-center" type="submit" disabled={isPending}>
+                Login
+                {isPending && <Spinner size={10} />}
+              </Button>
               <DrawerClose asChild>
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" disabled={isPending}>
                   Cancel
                 </Button>
               </DrawerClose>
