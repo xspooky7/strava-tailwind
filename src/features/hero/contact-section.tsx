@@ -20,12 +20,14 @@ export function ContactSection() {
   const currentYear = new Date().getFullYear()
 
   const [state, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
+    const formValues = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      message: formData.get("message") as string,
+    }
+
     try {
-      const validated = formSchema.parse({
-        name: formData.get("name"),
-        email: formData.get("email"),
-        message: formData.get("message"),
-      })
+      const validated = formSchema.parse(formValues)
 
       await sendEmail({
         email: validated.email,
@@ -33,14 +35,22 @@ export function ContactSection() {
         text: validated.message,
       })
 
-      return { success: true, message: "Message sent successfully!" }
+      return {
+        success: true,
+        message: "Message sent successfully!",
+        values: null,
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return {
           errors: error.flatten().fieldErrors,
+          values: formValues,
         }
       }
-      return { error: "Failed to send message" }
+      return {
+        error: "Failed to send message",
+        values: formValues,
+      }
     }
   }, null)
 
@@ -109,10 +119,23 @@ export function ContactSection() {
           <h4 className="text-lg font-semibold text-primary">Request App access</h4>
           <form action={formAction} className="space-y-4">
             <div className="space-y-2">
-              <Input className="border-muted" id="name" name="name" placeholder="Enter your strava username" />
+              <Input
+                className="border-muted"
+                id="name"
+                name="name"
+                placeholder="Enter your strava username"
+                defaultValue={state?.values?.name || ""}
+              />
               {state?.errors?.name && <p className="text-sm text-red-500">{state.errors.name[0]}</p>}
 
-              <Input className="border-muted" id="email" name="email" type="email" placeholder="Enter your email" />
+              <Input
+                className="border-muted"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                defaultValue={state?.values?.email || ""}
+              />
               {state?.errors?.email && <p className="text-sm text-red-500">{state.errors.email[0]}</p>}
 
               <Textarea
@@ -120,6 +143,7 @@ export function ContactSection() {
                 name="message"
                 placeholder="Describe your usecase"
                 className="border-muted min-h-[100px]"
+                defaultValue={state?.values?.message || ""}
               />
               {state?.errors?.message && <p className="text-sm text-red-500">{state.errors.message[0]}</p>}
 
