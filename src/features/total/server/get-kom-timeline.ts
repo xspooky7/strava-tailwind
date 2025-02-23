@@ -2,6 +2,7 @@
 
 import { SessionData } from "@/app/auth/types"
 import pb from "@/lib/pocketbase"
+import { Collections } from "@/lib/types/pocketbase-types"
 import { RecordModel } from "pocketbase"
 
 export const getKomTimeline = async (session: SessionData): Promise<{ date: string; desktop: number }[]> => {
@@ -9,7 +10,7 @@ export const getKomTimeline = async (session: SessionData): Promise<{ date: stri
   pb.authStore.save(session.pbAuth)
 
   let current = 3592
-  const rawData = await pb.collection("kom_timeseries").getFullList({
+  const rawData = await pb.collection(Collections.KomTimeseries).getFullList({
     fields: "created,status",
     sort: "created",
   })
