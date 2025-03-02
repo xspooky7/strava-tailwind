@@ -113,7 +113,7 @@ export async function getDeltaSegments(input: TableQuerySchema) {
     },
     [JSON.stringify(input)],
     {
-      revalidate: 300,
+      revalidate: 120,
       tags: ["delta"],
     }
   )()
