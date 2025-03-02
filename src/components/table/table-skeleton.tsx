@@ -99,7 +99,7 @@ export function CustomTableSkeleton(props: DataTableSkeletonProps) {
       {skeleton}
 
       <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">0 of 0 row(s) selected.</div>
+        <div className="flex-1 text-sm text-muted-foreground"></div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2 text-muted-foreground">
             <p className="text-sm font-medium">Rows per page</p>
@@ -165,7 +165,7 @@ function DataTableSkeleton(props: DataTableSkeletonProps) {
           {showViewOptions ? <Skeleton className="ml-auto hidden h-7 w-[4.5rem] lg:flex" /> : null}
         </div>
       )}
-      <div className="rounded-md border background bg-card">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {Array.from({ length: 1 }).map((_, i) => (

@@ -1,44 +1,42 @@
-import { Suspense } from "react"
-import { CustomTableSkeleton } from "@/components/table/table-skeleton"
-import { unstable_cache } from "next/cache"
+import * as React from "react"
+
 import { verifySession } from "@/app/auth/actions/verify-session"
-import { getDeltaSegments } from "@/features/delta/server/get-delta-segments"
-import { SegmentTable } from "@/components/table/table"
-import { ColumnId } from "@/lib/types/types"
+import pb from "@/lib/pocketbase"
+import { SearchParams } from "@/features/tables/_lib/types"
+import { searchParamsSchema } from "@/features/tables/_lib/validations"
+import { getDeltaSegments } from "@/features/tables/delta/server/queries"
+import { TableSkeleton } from "@/features/tables/_components/table-skeleton"
+import { DeltaTable } from "@/features/tables/delta/delta-table"
+import { CustomTableSkeleton } from "@/components/table/table-skeleton"
 
-const getCachedDeltaSegments = unstable_cache(async (session) => getDeltaSegments(session), ["delta"], {
-  revalidate: 120, // 2 minutes
-})
+export interface DeltaPageProps {
+  searchParams: Promise<SearchParams>
+}
 
-export default async function DeltaKomPage() {
+export default async function DeltaPage({ searchParams }: DeltaPageProps) {
   const session = await verifySession()
-  const data = getCachedDeltaSegments(session)
+  pb.authStore.save(session.pbAuth!)
 
-  const columnLayout: Partial<{ [key in ColumnId]: boolean }> = {
-    name: true,
-    city: true,
-    terrain: false,
-    label: false,
-    opponent: true,
-    status: true,
-    date: true,
-    actions: true,
-  }
+  const awaitedParams = await searchParams
+  const search = searchParamsSchema.parse(awaitedParams)
+
+  const dataPromise = getDeltaSegments(search)
 
   return (
-    <div className="py-5 md:px-2 lg:px-4">
-      <Suspense
+    <div className="grid items-center gap-8 py-5 px-2 lg:px-4">
+      <React.Suspense
         fallback={
           <CustomTableSkeleton
             columnCount={5}
             searchableColumnCount={1}
-            filterableColumnCount={1}
-            cellWidths={["4rem", "35rem", "14rem", "14rem", "5rem"]}
+            filterableColumnCount={2}
+            cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem"]}
+            shrinkZero
           />
         }
       >
-        <SegmentTable promises={data} columnLayout={columnLayout} sort="date" meta="delta" />
-      </Suspense>
+        <DeltaTable dataPromise={dataPromise} />
+      </React.Suspense>
     </div>
   )
 }

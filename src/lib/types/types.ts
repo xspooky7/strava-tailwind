@@ -13,26 +13,8 @@ export type Coordinate = {
   lat: number
   lon: number
 }
-type ColumnRegistry = {
-  delta: "name" | "city" | "terrain" | "label" | "opponent" | "status" | "date" | "actions"
-  total: "name" | "city" | "terrain" | "label" | "actions"
-  tailwind: "kom" | "name" | "city" | "terrain" | "label" | "tailwind" | "actions"
-}
 
 export type Status = "gained" | "claimed" | "lost" | "deleted" | "created" | "restored"
-export type TableId = "delta" | "total" | "tailwind"
-export type ColumnId =
-  | "name"
-  | "city"
-  | "actions"
-  | "label"
-  | "terrain"
-  | "star"
-  | "date"
-  | "opponent"
-  | "status"
-  | "kom"
-  | "tailwind"
 
 export type Label =
   | "Hazardous"
@@ -52,7 +34,7 @@ export type WeatherResponse = {
   avgTailwindSpeed: number
 }
 
-export interface TableSegment {
+export interface BaseTableSegment {
   segment_id: number
   name: string
   city: string
@@ -61,11 +43,15 @@ export interface TableSegment {
   distance: number
   average_grade: number
   labels?: Label[]
-  //delta
+}
+
+export interface DeltaTableSegment extends BaseTableSegment {
   opponent?: OpponentsRecord
   status?: Status
   created?: Date
-  //tailwind
+}
+
+export interface TailwindTableSegment extends BaseTableSegment {
   profile_url?: string
   leader_qom?: string | null
   wind?: WeatherResponse

@@ -3,6 +3,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,12 +30,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Toaster
-            toastOptions={{
-              className: "bg-secondary text-secondary-foreground rounded-md border-secondary-foreground",
-            }}
-          />
-          {children}
+          <NuqsAdapter>
+            <Toaster
+              toastOptions={{
+                className: "bg-secondary text-secondary-foreground rounded-md border-secondary-foreground",
+              }}
+            />
+            {children}
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>

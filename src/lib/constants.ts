@@ -1,5 +1,3 @@
-import { ColumnId, TableId } from "./types/types"
-
 export const MAX_WEATHER_QUERY_INTERVAL = 3000 // m maximum distance in between weather api requests. (Should never be lower than 2000)
 export const ACTIVELY_ACQUIRED_KOM_THRESHOLD = 86400000 // (ms) 24h. Time between creation and acquisition of the Kom. If above the value it's calssified as actively gained
 export const KOM_REGAINED_THRESHOLD = 43200000 // (ms) 12. Time between loss and regain of the KOM. Designates it as regained.
@@ -14,53 +12,3 @@ export const THRESHOLD = {
   UNCONTESTET: 0.01, // efforts per day since creation (˜35/year)
   CONTESTET: 4000, // efforts total
 }
-/*export const DEFAULT_TABLE_SETTINGS: Record<
-  TableId,
-  {
-    filters: string[]
-    visibility: Record<ColumnId<TableId>, boolean>
-    sort: ColumnId<TableId>
-  }
-> = {
-  delta: {
-    filters: [],
-    visibility: {
-      name: true,
-      city: true,
-      terrain: false,
-      label: false,
-      opponent: true,
-      status: true,
-      date: true,
-      actions: true,
-    },
-    sort: "date",
-  },
-  total: {
-    filters: [],
-    visibility: {
-      star: true,
-      name: true,
-      city: true,
-      terrain: false,
-      label: false,
-      actions: true,
-    },
-    sort: "city",
-  },
-  tailwind: {
-    filters: [],
-    visibility: {
-      kom: true,
-      name: true,
-      city: true,
-      terrain: false,
-      label: false,
-      tailwind: true,
-      actions: true,
-    },
-    sort: "tailwind",
-  },
-} as const
- xx
-*/

@@ -1,5 +1,8 @@
 "use client"
 
+import { MixerHorizontalIcon } from "@radix-ui/react-icons"
+import type { Table } from "@tanstack/react-table"
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,23 +12,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Table } from "@tanstack/react-table"
-import { Settings2Icon } from "lucide-react"
 
-interface DataTableViewOptionsProps<TData> {
+interface TableViewOptionsProps<TData> {
   table: Table<TData>
 }
 
-export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps<TData>) {
+export function TableViewOptions<TData>({ table }: TableViewOptionsProps<TData>) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="ml-auto h-8 lg:flex">
-          <Settings2Icon />
-          <span className="hidden md:block">View</span>
+        <Button aria-label="Toggle columns" variant="outline" size="sm" className="ml-auto flex h-8">
+          <MixerHorizontalIcon className="size-4" />
+          <span className="hidden ml-2 md:flex">View</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[150px]">
+      <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {table
@@ -37,11 +38,9 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
                 key={column.id}
                 className="capitalize"
                 checked={column.getIsVisible()}
-                onCheckedChange={(value) => {
-                  column.toggleVisibility(!!value)
-                }}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                <span className="truncate">{column.id}</span>
               </DropdownMenuCheckboxItem>
             )
           })}

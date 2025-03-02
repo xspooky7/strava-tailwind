@@ -1,52 +1,41 @@
-import { CustomTableSkeleton } from "@/components/table/table-skeleton"
-import { ColumnId, TableSegment } from "../../../../lib/types/types"
-import { Suspense } from "react"
-import { unstable_cache } from "next/cache"
-import { TotalKomChart, TotalKomChartLoading } from "@/features/total/total-kom-chart"
+import * as React from "react"
 import { verifySession } from "@/app/auth/actions/verify-session"
-import { getTotalSegments } from "@/features/total/server/get-total-segments"
-import { SegmentTable } from "@/components/table/table"
-import { getKomTimeline } from "@/features/total/server/get-kom-timeline"
-import { Separator } from "@/components/ui/separator"
+import pb from "@/lib/pocketbase"
+import { TotalTable } from "@/features/tables/total/total-table"
+import { SearchParams } from "@/features/tables/_lib/types"
+import { searchParamsSchema } from "@/features/tables/_lib/validations"
+import { getTotalKoms } from "@/features/tables/total/server/queries"
+import { TableSkeleton } from "@/features/tables/_components/table-skeleton"
+import { CustomTableSkeleton } from "@/components/table/table-skeleton"
 
-const getCachedTotalSegments = unstable_cache(async (session) => getTotalSegments(session), ["total"], {
-  revalidate: 120, // 2 minutes
-})
+export interface TotalPageProps {
+  searchParams: Promise<SearchParams>
+}
 
-const KomTotalPage = async () => {
+export default async function TotalPage({ searchParams }: TotalPageProps) {
   const session = await verifySession()
-  const totalKoms: Promise<TableSegment[]> = getCachedTotalSegments(session)
-  const komTimeline: Promise<{ date: string; desktop: number }[]> = getKomTimeline(session)
+  pb.authStore.save(session.pbAuth!)
 
-  const columnLayout: Partial<{ [key in ColumnId]: boolean }> = {
-    star: true,
-    name: true,
-    city: true,
-    terrain: false,
-    label: false,
-    actions: true,
-  }
+  const awaitedParams = await searchParams
+  const search = searchParamsSchema.parse(awaitedParams)
+
+  const dataPromise = getTotalKoms(search)
 
   return (
-    <div className="px-5 py-5 space-y-6">
-      <Suspense fallback={<TotalKomChartLoading />}>
-        <TotalKomChart chartDataPromise={komTimeline} />
-      </Suspense>
-      <Separator className="w-full opacity-30" />
-      <Suspense
+    <div className="grid items-center gap-8 py-5 px-2 lg:px-4">
+      <React.Suspense
         fallback={
           <CustomTableSkeleton
-            columnCount={4}
+            columnCount={5}
             searchableColumnCount={1}
-            filterableColumnCount={1}
-            cellWidths={["4rem", "40rem", "14rem", "5rem"]}
+            filterableColumnCount={2}
+            cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem"]}
+            shrinkZero
           />
         }
       >
-        <SegmentTable promises={totalKoms} columnLayout={columnLayout} sort="name" meta="total" />
-      </Suspense>
+        <TotalTable dataPromise={dataPromise} />
+      </React.Suspense>
     </div>
   )
 }
-
-export default KomTotalPage

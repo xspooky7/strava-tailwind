@@ -1,12 +1,22 @@
-import { GainLossChart } from "@/features/dashboard/components/gain-loss-chart"
-import { ProgressBoxes } from "@/features/dashboard/components/progress-boxes"
+import { CustomTableSkeleton } from "@/components/table/table-skeleton"
 
 const DashboradPage = async () => {
-  return null
   return (
-    <div className="grid px-5 w-full grid-cols-12 gap-2 lg:gap-3 xl:gap-5 grid-rows-none">
-      <ProgressBoxes />
-      <GainLossChart />
+    <>
+      <div className="flex space-between">
+        <h3>Welcome back (user)!</h3>
+      </div>
+    </>
+  )
+  return (
+    <div className="grid items-center gap-8 py-5 px-2 lg:px-4">
+      <CustomTableSkeleton
+        columnCount={5}
+        searchableColumnCount={1}
+        filterableColumnCount={2}
+        cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem"]}
+        shrinkZero
+      />
     </div>
   )
 }

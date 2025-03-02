@@ -1,20 +1,19 @@
 "use client"
 
 import { ColumnDef, Row } from "@tanstack/react-table"
-import { TableColumnHeader } from "@/components/table/table-column-header"
-import { FlagIcon, MedalIcon, PencilLineIcon, RotateCwIcon, Trash2Icon, XIcon } from "lucide-react"
-import { TableSegment } from "@/lib/types/types"
+import { CircleXIcon, FlagIcon, MedalIcon, PencilLineIcon, RotateCwIcon, Trash2Icon } from "lucide-react"
+import { DeltaTableSegment } from "@/lib/types/types"
 import { DateRange } from "@/components/date-range-picker/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import StatusTooltip from "@/features/delta/components/status-tooltip"
+import StatusTooltip from "@/features/tables/delta/components/status-tooltip"
+import { TableColumnHeader } from "../_components/table-column-header"
 
-export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
-  date: {
-    id: "date",
-    accessorKey: "date",
-
+export const deltaTableColumns: ColumnDef<DeltaTableSegment>[] = [
+  {
+    id: "created",
+    accessorKey: "created",
     minSize: 100,
-    header: ({ column }) => <TableColumnHeader column={column} title="Date" />,
+    header: ({ column }) => <TableColumnHeader column={column} title="Created" />,
     sortingFn: (rowA, rowB, columnId) => getDateFromRow(rowA) - getDateFromRow(rowB),
     filterFn: (row, columnId, filterValue) => {
       const rowDate = new Date(getDateFromRow(row))
@@ -32,7 +31,7 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
       return <p className="text-muted-foreground min-w-[85px]">{createdDateString}</p>
     },
   },
-  status: {
+  {
     id: "status",
     accessorKey: "status",
     header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
@@ -56,7 +55,9 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
             <StatusTooltip title="Claimed" description="as first of your gender" color="text-warning" icon={FlagIcon} />
           )
         case "lost":
-          return <StatusTooltip title="Lost" description="to another athlete" color="text-destructive" icon={XIcon} />
+          return (
+            <StatusTooltip title="Lost" description="to another athlete" color="text-destructive" icon={CircleXIcon} />
+          )
         case "deleted":
           return (
             <StatusTooltip
@@ -80,9 +81,10 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
       }
     },
   },
-  opponent: {
+  {
     id: "opponent",
     accessorKey: "opponent",
+    accessorFn: (row) => (row.opponent ? row.opponent.name : ""),
     header: ({ column }) => <TableColumnHeader column={column} title="Opponent" />,
     cell: ({ row }) => {
       const { opponent } = row.original
@@ -100,8 +102,8 @@ export const deltaColumns: { [key: string]: ColumnDef<TableSegment> } = {
       return null
     },
   },
-}
-
-const getDateFromRow = (row: Row<TableSegment>): number => {
+]
+//TODO tf
+const getDateFromRow = (row: Row<DeltaTableSegment>): number => {
   return new Date(row.original.created!).getTime()
 }

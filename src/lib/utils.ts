@@ -113,6 +113,7 @@ export const getPath = (polyline: string) => {
   return path
 }
 
+// TODO zod
 export const sanatizeSegment = (obj: any): SegmentRecord => {
   const getValue = (value: any, fallback: any = null) => value || fallback
 

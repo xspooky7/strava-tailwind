@@ -2,12 +2,12 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { CrownIcon, PercentIcon, WindIcon } from "lucide-react"
-import { TableSegment } from "@/lib/types/types"
 import { Separator } from "@/components/ui/separator"
-import { TableColumnHeader } from "@/components/table/table-column-header"
+import { TailwindTableSegment } from "@/lib/types/types"
+import { TableColumnHeader } from "../_components/table-column-header"
 
-export const tailwindColumns: { [key: string]: ColumnDef<TableSegment> } = {
-  kom: {
+export const tailwindTableColumns: ColumnDef<TailwindTableSegment>[] = [
+  {
     id: "kom",
     enableSorting: false,
     cell: ({ row }) => {
@@ -21,7 +21,7 @@ export const tailwindColumns: { [key: string]: ColumnDef<TableSegment> } = {
       )
     },
   },
-  tailwind: {
+  {
     id: "tailwind",
     accessorKey: "tailwind",
     header: ({ column }) => <TableColumnHeader column={column} title="Tailwind" />,
@@ -38,7 +38,7 @@ export const tailwindColumns: { [key: string]: ColumnDef<TableSegment> } = {
       )
     },
   },
-}
+]
 /*
   profile: {
     accessorKey: "profile",
