@@ -4,7 +4,7 @@ import pb from "@/lib/pocketbase"
 import { SessionData } from "@/app/auth/types"
 import { fetchStarredSegments } from "./get-starred-segments"
 import { processSegmentData } from "./process-new-segments"
-import { unstable_cache } from "@/lib/unstable-cache"
+import { unstable_cache as next_unstable_cache } from "next/cache"
 import { fetchWeatherDataForSegments } from "./get-weather-data"
 
 /**
@@ -24,7 +24,7 @@ import { fetchWeatherDataForSegments } from "./get-weather-data"
  */
 
 export async function getTailwindSegments(session: SessionData) {
-  return await unstable_cache(
+  return await next_unstable_cache(
     async () => {
       try {
         if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")

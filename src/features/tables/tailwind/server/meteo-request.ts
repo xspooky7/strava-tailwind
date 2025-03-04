@@ -1,5 +1,5 @@
 import { Coordinate } from "@/lib/types/types"
-import { unstable_cache } from "@/lib/unstable-cache"
+import { unstable_cache as next_unstable_cache } from "next/cache"
 import { fetchWeatherApi } from "openmeteo"
 
 /**
@@ -20,7 +20,8 @@ import { fetchWeatherApi } from "openmeteo"
  */
 
 export async function cachedMeteoRequest(coord: Coordinate, gridKey: string) {
-  return await unstable_cache(
+  console.log(`Request for grid: ${gridKey} at ${new Date().toISOString()}, coords: ${coord.lat} - ${coord.lon}`)
+  return await next_unstable_cache(
     async () => {
       console.log(`Cache MISS for grid: ${gridKey} at ${new Date().toISOString()}`)
       const params = {
