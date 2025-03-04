@@ -52,7 +52,6 @@ export interface DeltaTableSegment extends BaseTableSegment {
 }
 
 export interface TailwindTableSegment extends BaseTableSegment {
-  profile_url?: string
   leader_qom?: string | null
   wind?: WeatherResponse
 }

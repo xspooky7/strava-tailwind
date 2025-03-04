@@ -28,30 +28,6 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
   return sanatizeSegment({ ...detailedSegment, labels: getLabel(detailedSegment) })
 }
 
-export const fetchStarredPage = async (page: number, stravaToken: string) => {
-  const session = await verifySession()
-  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
-  return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + stravaToken,
-    },
-    next: {
-      tags: ["strava-starred"],
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: Couldn't retrieve starred segment page ${page} from Strava`)
-      }
-      return response.json()
-    })
-    .catch((err) => {
-      throw new Error(`Error 401: Couldn't retrieve starred segment page ${page} from Strava`)
-    })
-}
-
 export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boolean]> => {
   const userTokenRecord: UserTokenRecord = await pb
     .collection(Collections.UserTokens)

@@ -139,6 +139,12 @@ export type UserRecord = {
   pfp_url?: string
 }
 
+export type KomEffortExpand = {
+  segment?: SegmentResponse
+  user?: UserResponse
+  pr_effort?: EffortDetailResponse
+}
+
 // Response types include system fields and match responses from the PocketBase API
 export type EffortDetailResponse<Texpand = unknown> = Required<EffortDetailRecord> & BaseSystemFields<Texpand>
 export type KomEffortResponse<Texpand = unknown> = Required<KomEffortRecord> & BaseSystemFields<Texpand>

@@ -1,41 +1,101 @@
 "use server"
 
-import { verifySession } from "@/app/auth/actions/verify-session"
-import { Collections, KomEffortRecord, SegmentRecord } from "@/lib/types/pocketbase-types"
-import pb from "@/lib/pocketbase"
+import { fetchNewSegmentRecord } from "@/lib/strava"
+import { RecordIdString, SegmentRecord } from "@/lib/types/pocketbase-types"
+
+import { Line, TailwindTableSegment } from "@/lib/types/types"
+import { RecordModel } from "pocketbase"
+import { bulkUnstarSegments } from "./bulk-unstar-segments"
 
 /**
- * Function that creates or updates a Kom Effort Records to be starred and if necessary creates the corrosponding Segment Records
- * @param {SegmentRecord[]} segments
+ * Processes Strava segment data by comparing starred segments with database records
+ *
+ * @param {any[]} stravaStarredList
+ * - List of segments starred by user on Strava
+ * @param {(TailwindTableSegment & { path: Line[]; id: RecordIdString })[]} dbKomEffortRecords
+ * - Existing segment records from the database
+ * @param {string} stravaToken
+ * - Authentication token for Strava API requests
+ *
+ * @returns {Object} Object containing:
+ *   - newSegments: Newly fetched segment records
+ *   - tailwindSegments: Combined list of known and new segments for display
+ *   - requestCount: Number of Strava API requests made
+ *   - exceededRateLimit: Boolean indicating if Strava rate limit was exceeded
  */
-export const processNewSegments = async (segments: SegmentRecord[]): Promise<void> => {
-  const session = await verifySession()
-  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
 
-  pb.authStore.save(session.pbAuth)
+export async function processSegmentData(
+  stravaStarredList: any[],
+  dbKomEffortRecords: (TailwindTableSegment & { path: Line[]; id: RecordIdString })[],
+  stravaToken: string
+) {
+  let stravaRequestCount = 0
+  let exceededRate = false
 
-  for (const segment of segments) {
-    try {
-      const komEffort: KomEffortRecord = await pb
-        .collection(Collections.KomEfforts)
-        .getFirstListItem(`segment_id=${segment.segment_id}`)
-      komEffort.is_starred = true
-      await pb.collection(Collections.KomEfforts).update(komEffort.id!, komEffort)
-    } catch (err) {
-      let seg_ref: SegmentRecord
-      try {
-        seg_ref = await pb.collection(Collections.Segments).getFirstListItem(`segment_id=${segment.segment_id}`)
-      } catch (err) {
-        seg_ref = await pb.collection(Collections.Segments).create(segment)
+  // Find segments that are already known in our database
+  const knownSegments: (TailwindTableSegment & { path: Line[]; id: RecordIdString })[] = []
+
+  // Create fetch promises for new segments that aren't in our database yet
+  const newSegmentPromises: Promise<SegmentRecord>[] = stravaStarredList
+    .filter((apiListEle: any) => {
+      const known = dbKomEffortRecords.find((rec) => rec.segment_id === apiListEle.id)
+      if (known) {
+        knownSegments.push(known)
+        return false
       }
-      const newRecord: KomEffortRecord = {
-        segment: seg_ref.id!,
-        user: session.userId,
-        segment_id: seg_ref.segment_id,
+      return true
+    })
+    .slice(0, 50) // TODO make this accurate
+    .map((apiListEle: any) => {
+      stravaRequestCount++
+      return fetchNewSegmentRecord(apiListEle.id, stravaToken)
+    })
+
+  // Find segments that need to be unstarred (they're in our DB but no longer in the Strava list)
+  const toUnstarEffortRefs = dbKomEffortRecords
+    .filter((effort) => !stravaStarredList.some((x: any) => x.id === effort.segment_id))
+    .map((effort) => {
+      return effort.id
+    })
+
+  // Process both new segments and unstar operations concurrently
+  const [newSegmentsSettled] = await Promise.all([
+    Promise.allSettled(newSegmentPromises),
+    bulkUnstarSegments(toUnstarEffortRefs),
+  ])
+
+  // Process results from fetched new segments
+  const newTailwindSegments: (TailwindTableSegment & { path: Line[] })[] = []
+  const newSegments: SegmentRecord[] = newSegmentsSettled
+    .filter((val) => {
+      const isFullfilled = val.status === "fulfilled"
+      if (!isFullfilled) exceededRate = true
+      else stravaRequestCount++
+      return isFullfilled
+    })
+    .map((obj: any) => {
+      newTailwindSegments.push({
+        name: obj.value.name,
+        city: obj.value.city,
+        segment_id: obj.value.segment_id,
+        distance: obj.value.distance,
+        path: obj.value.path!,
         is_starred: true,
         has_kom: false,
-      }
-      await pb.collection(Collections.KomEfforts).create(newRecord)
-    }
+        labels: obj.value.labels,
+        average_grade: obj.value.average_grade,
+        leader_qom: obj.value.leader_qom,
+      })
+      return { ...obj.value }
+    })
+
+  // Combine both known and new segments
+  const tailwindSegments = newTailwindSegments.concat(knownSegments)
+
+  return {
+    newSegments,
+    tailwindSegments,
+    requestCount: stravaRequestCount,
+    exceededRateLimit: exceededRate,
   }
 }
