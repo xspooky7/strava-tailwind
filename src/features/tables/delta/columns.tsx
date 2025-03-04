@@ -1,7 +1,16 @@
 "use client"
 
 import { ColumnDef, Row } from "@tanstack/react-table"
-import { CircleXIcon, FlagIcon, MedalIcon, PencilLineIcon, RotateCwIcon, Trash2Icon } from "lucide-react"
+import {
+  CircleXIcon,
+  FlagIcon,
+  MedalIcon,
+  PencilLineIcon,
+  RotateCwIcon,
+  Scale3dIcon,
+  ScaleIcon,
+  Trash2Icon,
+} from "lucide-react"
 import { DeltaTableSegment } from "@/lib/types/types"
 import { DateRange } from "@/components/date-range-picker/types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -91,10 +100,14 @@ export const deltaTableColumns: ColumnDef<DeltaTableSegment>[] = [
       if (opponent) {
         return (
           <div className="flex items-center gap-1">
-            <Avatar className="w-7 h-7">
-              <AvatarImage src={opponent.avatar} />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+            {opponent.name !== "Tied" ? (
+              <Avatar className="w-7 h-7">
+                <AvatarImage src={opponent.avatar} />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            ) : (
+              <ScaleIcon size={20} />
+            )}
             <span>{opponent.name}</span>
           </div>
         )

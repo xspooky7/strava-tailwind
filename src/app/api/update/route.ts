@@ -18,6 +18,7 @@ interface Order {
   segment_id: number
   status: "gained" | "lost"
   gender: "f" | "m"
+  athleteId: number
 }
 export const maxDuration = 60 // vercel
 
@@ -31,6 +32,7 @@ export async function GET(req: Request) {
 
     const userId = process.env.USER_ID!
     const userGender = "f"
+    const athleteId = 21856708
 
     let exceededRate = false
     const date = new Date()
@@ -193,7 +195,7 @@ export async function GET(req: Request) {
           }
           log(`[DATABASE] Succesfully created a Loss Record (seg_id:${lostId})`)
 
-          order.push({ ref_id: lossRecordRef.id, segment_id: lostId, status: "lost", gender: userGender })
+          order.push({ ref_id: lossRecordRef.id, segment_id: lostId, status: "lost", gender: userGender, athleteId })
         }
       }
 
@@ -257,7 +259,13 @@ export async function GET(req: Request) {
             log(`[DATABASE] Succesfully created an active Gain Record (seg_id:${gainedId})`)
 
             if (!restored) {
-              order.push({ ref_id: gainRecordRef.id, segment_id: gainedId, status: "gained", gender: userGender })
+              order.push({
+                ref_id: gainRecordRef.id,
+                segment_id: gainedId,
+                status: "gained",
+                gender: userGender,
+                athleteId,
+              })
             }
           } else {
             let seg_ref: SegmentRecord,
@@ -341,6 +349,7 @@ export async function GET(req: Request) {
                 segment_id: seg_ref.segment_id,
                 status: "gained",
                 gender: userGender,
+                athleteId,
               })
             }
           }
