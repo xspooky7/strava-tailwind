@@ -1,3 +1,5 @@
+"use server"
+
 import { Coordinate } from "@/lib/types/types"
 import { unstable_cache as next_unstable_cache } from "next/cache"
 import { fetchWeatherApi } from "openmeteo"
@@ -21,6 +23,7 @@ import { fetchWeatherApi } from "openmeteo"
 
 export async function cachedMeteoRequest(coord: Coordinate, gridKey: string) {
   console.log(`Request for grid: ${gridKey} at ${new Date().toISOString()}, coords: ${coord.lat} - ${coord.lon}`)
+  //why does this revalidate on every request??
   return await next_unstable_cache(
     async () => {
       console.log(`Cache MISS for grid: ${gridKey} at ${new Date().toISOString()}`)
@@ -58,7 +61,7 @@ export async function cachedMeteoRequest(coord: Coordinate, gridKey: string) {
     [gridKey],
     {
       revalidate: 600,
-      tags: ["meteo-grids"],
+      tags: ["meteo-requests"],
     }
   )()
 }

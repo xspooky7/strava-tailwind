@@ -45,7 +45,7 @@ export async function processSegmentData(
       }
       return true
     })
-    .slice(0, 50) // TODO make this accurate
+    .slice(0, 50) // TODO make this limit better
     .map((apiListEle: any) => {
       stravaRequestCount++
       return fetchNewSegmentRecord(apiListEle.id, stravaToken)
@@ -89,7 +89,6 @@ export async function processSegmentData(
       return { ...obj.value }
     })
 
-  // Combine both known and new segments
   const tailwindSegments = newTailwindSegments.concat(knownSegments)
 
   return {

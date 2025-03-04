@@ -1,6 +1,5 @@
-import { MAX_WEATHER_QUERY_INTERVAL } from "@/lib/constants"
 import { Coordinate, Line, TailwindTableSegment } from "@/lib/types/types"
-import { getCenter, getDistance } from "geolib"
+import { getCenter } from "geolib"
 import { cachedMeteoRequest } from "./meteo-request"
 
 /**
@@ -14,16 +13,11 @@ export async function calculateTailwind(segments: (TailwindTableSegment & { path
   let apiRequestCount = 0
   const results: TailwindTableSegment[] = []
 
-  // Create a deterministic grid system for coordinates
-  // This ensures the same coordinates always map to the same cluster
-
   // Grid size in degrees (approximately)
-  // 0.05 degrees is roughly 5.5 km at the equator
-  // Adjust based on your weather variation needs
+  // 0.05 degrees is roughly 5.5 km TODO finetune
   const GRID_SIZE_DEGREES = 0.05
 
   function getGridKey(coord: Coordinate): string {
-    // Round coordinates to fixed grid cells
     const gridLat = Math.floor(coord.lat / GRID_SIZE_DEGREES) * GRID_SIZE_DEGREES
     const gridLon = Math.floor(coord.lon / GRID_SIZE_DEGREES) * GRID_SIZE_DEGREES
     return `${gridLat.toFixed(4)},${gridLon.toFixed(4)}`
@@ -44,13 +38,10 @@ export async function calculateTailwind(segments: (TailwindTableSegment & { path
         lon: midpoint.longitude,
       }
 
-      // Get the grid cell key for this coordinate
       const gridKey = getGridKey(formattedMidpoint)
-
-      // Store grid key on the line for later reference
       line.gridKey = gridKey
 
-      // Store one representative coordinate for each grid cell
+      //TODO calc diagonal midpoint of grid as refrence point instead of random point
       if (!gridMap.has(gridKey)) {
         gridMap.set(gridKey, formattedMidpoint)
       }
@@ -71,7 +62,6 @@ export async function calculateTailwind(segments: (TailwindTableSegment & { path
   // Helper map for looking up weather data by grid key
   const weatherDataMap = new Map(weatherResults.map(({ gridKey, weatherData }) => [gridKey, weatherData]))
 
-  // Calculate tailwind metrics for each segment
   segments.forEach((segment) => {
     const path: (Line & { gridKey?: string })[] = segment.path
     let tailAbs = 0,

@@ -1,12 +1,5 @@
-import { Suspense } from "react"
-import { CustomTableSkeleton } from "@/components/table/table-skeleton"
-import { unstable_cache } from "next/cache"
 import { verifySession } from "@/app/auth/actions/verify-session"
 import { getTailwindSegments } from "@/features/tables/tailwind/server"
-
-//const getCachedTailwindSegments = unstable_cache(async (session) => getTailwindSegments(session), ["tailwind"], {
-//revalidate: 240, // 4 minutes
-//})
 
 export default async function TailwindPage() {
   const session = await verifySession()
