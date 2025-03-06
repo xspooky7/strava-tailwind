@@ -35,7 +35,6 @@ export async function getDeltaSegments(input: TableQuerySchema) {
 
         // Filter tasks by status
         if (input.labels) {
-          console.log("input.labels", input.labels)
           const labelArray = input.labels.split(".").filter(Boolean) as Label[]
           labelArray.forEach((label) => {
             filterConditions.push(`kom_effort.segment.labels ~ "${label}"`)

@@ -8,6 +8,7 @@ import { fetchWeatherApi } from "openmeteo"
  * Fetches and caches weather data from the Open-Meteo API
  *
  * @param coord - Coordinate object containing latitude and longitude
+ * @param gridKey - cache key
  * @returns Weather data object with current conditions
  *   - current: Object containing current weather measurements
  *     - time: Date object representing the time of measurement
@@ -22,11 +23,8 @@ import { fetchWeatherApi } from "openmeteo"
  */
 
 export async function cachedMeteoRequest(coord: Coordinate, gridKey: string) {
-  console.log(`Request for grid: ${gridKey} at ${new Date().toISOString()}, coords: ${coord.lat} - ${coord.lon}`)
-  //why does this revalidate on every request??
   return await next_unstable_cache(
     async () => {
-      console.log(`Cache MISS for grid: ${gridKey} at ${new Date().toISOString()}`)
       const params = {
         latitude: coord.lat,
         longitude: coord.lon,

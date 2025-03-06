@@ -1,29 +1,14 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { CrownIcon, PercentIcon, WindIcon } from "lucide-react"
+import { PercentIcon, WindIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { TailwindTableSegment } from "@/lib/types/types"
 import { TableColumnHeader } from "../_components/table-column-header"
 
 export const tailwindTableColumns: ColumnDef<TailwindTableSegment>[] = [
   {
-    id: "kom",
-    enableSorting: false,
-    cell: ({ row }) => {
-      let crownColor = "text-muted"
-      if (row.original.has_kom) crownColor = "text-amber-300"
-      else if (!row.original.leader_qom) crownColor = "text-pink-300"
-      return (
-        <div className="flex justify-center">
-          <CrownIcon className={"h-5 w-5 " + crownColor} />
-        </div>
-      )
-    },
-  },
-  {
     id: "tailwind",
-    accessorKey: "tailwind",
     header: ({ column }) => <TableColumnHeader column={column} title="Tailwind" />,
     accessorFn: (row) => row.wind!.tail,
     cell: ({ row }) => {
@@ -39,11 +24,3 @@ export const tailwindTableColumns: ColumnDef<TailwindTableSegment>[] = [
     },
   },
 ]
-/*
-  profile: {
-    accessorKey: "profile",
-    header: ({ column }) => <TableColumnHeader column={column} title="Profile" />,
-    cell: ({ row }) => {
-      return <Image src={row.original.profile_url!} alt="" width={112} height={32} />
-    },
-  },*/

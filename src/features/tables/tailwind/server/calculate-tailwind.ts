@@ -10,7 +10,6 @@ import { cachedMeteoRequest } from "./meteo-request"
  * @returns Object containing processed segments with wind data and count of weather API requests made
  */
 export async function calculateTailwind(segments: (TailwindTableSegment & { path: Line[] })[]) {
-  let apiRequestCount = 0
   const results: TailwindTableSegment[] = []
 
   // Grid size in degrees (approximately)
@@ -57,7 +56,6 @@ export async function calculateTailwind(segments: (TailwindTableSegment & { path
   })
 
   const weatherResults = await Promise.all(weatherPromises)
-  apiRequestCount = weatherResults.length
 
   // Helper map for looking up weather data by grid key
   const weatherDataMap = new Map(weatherResults.map(({ gridKey, weatherData }) => [gridKey, weatherData]))
@@ -116,5 +114,5 @@ export async function calculateTailwind(segments: (TailwindTableSegment & { path
     })
   })
 
-  return { results, requestCount: apiRequestCount }
+  return { results }
 }

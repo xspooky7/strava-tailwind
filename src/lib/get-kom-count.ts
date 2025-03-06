@@ -21,10 +21,10 @@ export const getKomCount = async (session: SessionData) => {
         return 0
       }
     },
-    [JSON.stringify(session)],
+    [],
     {
-      revalidate: 3600,
-      tags: ["kom_count"],
+      revalidate: 120,
+      tags: ["kom-count"],
     }
   )()
 }

@@ -11,7 +11,6 @@ export async function getTotalKoms(input: TableQuerySchema) {
   return await unstable_cache(
     async () => {
       try {
-        console.log("input", input)
         // Offset to paginate the results
         const offset = (input.page - 1) * input.perPage
         // Column and order to sort by

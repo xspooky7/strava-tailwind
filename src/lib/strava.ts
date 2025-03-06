@@ -5,6 +5,7 @@ import { Collections, SegmentRecord, UserTokenRecord } from "./types/pocketbase-
 import axios from "axios"
 import { getLabel, getPath, sanatizeSegment } from "./utils"
 import { verifySession } from "@/app/auth/actions/verify-session"
+import { cache } from "react"
 
 /**
  * Fetches the details for a newly added segment. Surpresses rate exceeding error.
@@ -28,7 +29,7 @@ export const fetchNewSegmentRecord = async (id: number, token: string): Promise<
   return sanatizeSegment({ ...detailedSegment, labels: getLabel(detailedSegment) })
 }
 
-export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boolean]> => {
+export const getStravaToken = cache(async (overlapSeconds = 600): Promise<[string, boolean]> => {
   const userTokenRecord: UserTokenRecord = await pb
     .collection(Collections.UserTokens)
     .getFirstListItem(`user = "${process.env.USER_ID}"`, { cache: "no-store" })
@@ -59,4 +60,4 @@ export const getStravaToken = async (overlapSeconds = 600): Promise<[string, boo
 
     return [newTokenData.data.access_token, true]
   } else return [userTokenRecord.access_token, false]
-}
+})

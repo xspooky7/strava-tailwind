@@ -2,7 +2,7 @@
 
 import { verifySession } from "@/app/auth/actions/verify-session"
 import { RecordModel } from "pocketbase"
-import { Collections, KomEffortRecord, RecordIdString, SegmentRecord } from "@/lib/types/pocketbase-types"
+import { Collections, RecordIdString } from "@/lib/types/pocketbase-types"
 import pb from "@/lib/pocketbase"
 import { getStravaToken } from "@/lib/strava"
 import { asError } from "@/lib/utils"
@@ -14,7 +14,7 @@ import { Line, TailwindTableSegment } from "@/lib/types/types"
  * @returns Object containing Strava starred segments, database records, token, and request count
  */
 
-export async function fetchStarredSegments() {
+export async function fetchStarredSegments(userId: string) {
   let stravaRequestCount = 0
   let stravaToken = ""
 
@@ -30,7 +30,7 @@ export async function fetchStarredSegments() {
   // Fetch both Strava starred segments and DB records concurrently
   const [stravaStarredList, dbKomEffortRecords] = await Promise.all([
     fetchStarredPage(1, stravaToken),
-    getStarredSegmentsFromDatabase(),
+    getStarredSegmentsFromDatabase(userId),
   ])
 
   // Check if we need to fetch additional pages
@@ -63,9 +63,6 @@ export async function fetchStarredSegments() {
  */
 
 async function fetchStarredPage(page: number, stravaToken: string) {
-  const session = await verifySession()
-  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
   return fetch(`${process.env.STRAVA_API}/segments/starred?page=${page}&per_page=200`, {
     method: "GET",
     headers: {
@@ -92,16 +89,11 @@ async function fetchStarredPage(page: number, stravaToken: string) {
  * @returns Array of KomEffort records with expanded segment data
  */
 
-async function getStarredSegmentsFromDatabase(): Promise<
-  (TailwindTableSegment & { path: Line[]; id: RecordIdString })[]
-> {
-  const session = await verifySession()
-  if (!session.isLoggedIn || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
-  pb.authStore.save(session.pbAuth)
-
+async function getStarredSegmentsFromDatabase(
+  userId: string
+): Promise<(TailwindTableSegment & { path: Line[]; id: RecordIdString })[]> {
   const starredSegmentsRequest = await pb.collection(Collections.KomEfforts).getFullList({
-    filter: `user="${session.userId}" && is_starred=true`,
+    filter: `user="${userId}" && is_starred=true`,
     expand: "segment",
     fields: `id,expand.segment.name,
     expand.segment.city,

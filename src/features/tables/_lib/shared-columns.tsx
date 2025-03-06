@@ -45,6 +45,14 @@ export function createBaseColumns<T extends BaseTableSegment>(): ColumnDef<T>[] 
       id: "labels",
       accessorKey: "labels",
       header: ({ column }) => null,
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue || filterValue.length === 0) return true
+        const labels = row.getValue(columnId)
+        if (!labels || !Array.isArray(labels)) return false
+
+        // Check if any of the selected filter values exist in the row's labels
+        return filterValue.some((filter: Label) => labels.includes(filter))
+      },
       cell: ({ row }) => null,
       enableSorting: false,
       enableHiding: false,
@@ -59,7 +67,7 @@ export function createBaseColumns<T extends BaseTableSegment>(): ColumnDef<T>[] 
     },
     {
       id: "terrain",
-      accessorKey: "terrain",
+      accessorKey: "average_grade",
       header: ({ column }) => <TableColumnHeader column={column} title="Terrain" />,
       cell: ({ row }) => {
         let distance = Math.round(row.original.distance) + "m"
@@ -81,56 +89,5 @@ export function createBaseColumns<T extends BaseTableSegment>(): ColumnDef<T>[] 
       enableSorting: false,
       enableHiding: false,
     },
-    /*{
-      id: "star",
-      cell: ({ row }) => {
-        const starred = row.original.is_starred
-        return (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="flex justify-center items-center cursor-pointer group">
-                <StarIcon
-                  className={
-                    "h-5 w-5 translate-y-[2px] cursor-pointer" +
-                    (starred
-                      ? " text-amber-400 fill-amber-400 group-hover:text-muted group-hover:fill-transparent"
-                      : " text-muted group-hover:text-amber-400 group-hover:fill-amber-400")
-                  }
-                />
-              </div>
-            </AlertDialogTrigger>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex gap-2 items-center">
-                  {starred ? (
-                    <>
-                      <StarOffIcon className="h-5 w-5" />
-                      Unstar Segment?
-                    </>
-                  ) : (
-                    <>
-                      <StarIcon className="h-5 w-5" />
-                      Star Segment?
-                    </>
-                  )}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Do you want to {starred ? "unstar" : "star"} {row.original.name}?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => console.log(row.original.segment_id, starred)}>
-                  Continue
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )
-      },
-      enableSorting: false,
-      enableHiding: false,
-    },*/
   ]
 }

@@ -15,7 +15,6 @@ export const login = async (prevState: { error: null | boolean }, formData: Form
 
   const username = formData.get("username") as string
   const password = formData.get("password") as string
-  console.log(username, password)
 
   try {
     const { token, record: userModel } = await pb.collection(Collections.Users).authWithPassword(username, password)

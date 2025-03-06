@@ -6,12 +6,7 @@ import { Collections, KomEffortRecord, SegmentRecord } from "@/lib/types/pocketb
  * Function that creates or updates a Kom Effort Records to be starred and if necessary creates the corrosponding Segment Records
  * @param {SegmentRecord[]} segments
  */
-export const processNewSegments = async (segments: SegmentRecord[]): Promise<void> => {
-  const session = await verifySession()
-  if (!session.isLoggedIn || !session.userId || session.pbAuth == null) throw new Error("Couldn't authenticate!")
-
-  pb.authStore.save(session.pbAuth)
-
+export const processNewSegments = async (segments: SegmentRecord[], userId: string): Promise<void> => {
   for (const segment of segments) {
     try {
       const komEffort: KomEffortRecord = await pb
@@ -28,7 +23,7 @@ export const processNewSegments = async (segments: SegmentRecord[]): Promise<voi
       }
       const newRecord: KomEffortRecord = {
         segment: seg_ref.id!,
-        user: session.userId,
+        user: userId,
         segment_id: seg_ref.segment_id,
         is_starred: true,
         has_kom: false,

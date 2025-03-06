@@ -30,11 +30,7 @@ export const toggleStarEffort = async (segment_id: number, status: boolean) => {
         .getFirstListItem(`segment_id=${segment_id}`)
 
       effort.is_starred = newStatus
-      console.log(effort.is_starred)
-      await pb
-        .collection(Collections.KomEfforts)
-        .update(effort.id!, effort)
-        .then(() => console.log("PATCH SUCCESS"))
+      await pb.collection(Collections.KomEfforts).update(effort.id!, effort)
     } catch (dbError) {
       try {
         await axios({
