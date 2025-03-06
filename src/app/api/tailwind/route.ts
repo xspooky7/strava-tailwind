@@ -6,6 +6,7 @@ import { processNewSegments } from "@/features/tables/tailwind/server/update-dat
 import { NextResponse } from "next/server"
 import { TailwindTableSegment } from "@/lib/types/types"
 import { StatusState } from "@/features/tables/tailwind/types"
+import { BASE_URL } from "@/lib/base-url"
 
 /**
  * Streams the process of fetching and analyzing tailwind data for a user's starred Strava segments.
@@ -95,7 +96,7 @@ export async function GET(): Promise<NextResponse<ReadableStream<TailwindTableSe
           })
 
           // The only way for me to cache a function response within a stream was to source it out in a seperate route
-          const response = await fetch("http://localhost:3000/api/weather-data", {
+          const response = await fetch(BASE_URL + "/api/weather-data", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
