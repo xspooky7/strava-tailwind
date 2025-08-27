@@ -19,5 +19,5 @@ export function ConfettiMaker({ komCount }: { komCount: Promise<number> }) {
   }, [])
   const count: number = use(komCount)
 
-  return count >= 4100 ? <Confetti width={state.width} height={state.height} /> : null
+  return count >= 5000 ? <Confetti width={state.width} height={state.height} /> : null
 }
