@@ -213,7 +213,7 @@ export default async function TaskList() {
       <h1 className="text-2xl font-bold mb-4"> / / TODO</h1>
 
       {/* Current Sprint Tasks */}
-      <div className="mb-4 bg-card border-main shadow-sm rounded-lg p-4">
+      <div className="mb-4 bg-card border-main shadow-xs rounded-lg p-4">
         <h2 className="text-xl font-semibold mb-4">Current Sprint (S{currentSprint})</h2>
         <div className="space-y-2">
           {currentSprintTasks.map((task) => (
@@ -227,7 +227,7 @@ export default async function TaskList() {
       {/* All Tasks by Feature */}
       <div className="grid gap-4 md:grid-cols-2">
         {tasks.map((feature) => (
-          <div key={feature.name} className="bg-card shadow-sm rounded-lg p-4">
+          <div key={feature.name} className="bg-card shadow-xs rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{feature.name}</h2>
               <Badge variant="outline">{feature.items.length}</Badge>

@@ -21,7 +21,7 @@ export function TablePagination<TData>({ table, pageSizeOptions = [10, 20, 30, 4
               table.setPageSize(Number(value))
             }}
           >
-            <SelectTrigger className="h-8 w-[4.5rem]">
+            <SelectTrigger className="h-8 w-18">
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
